@@ -43,6 +43,11 @@ const routes = [
         path: 'audit',
         name: 'AuditManage',
         component: () => import('../views/AuditManage.vue')
+      },
+      {
+        path: 'my-clubs',
+        name: 'MyClubs',
+        component: () => import('../views/MyClubs.vue')
       }
     ]
   }

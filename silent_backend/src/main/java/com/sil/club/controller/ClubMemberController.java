@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -99,6 +100,17 @@ public class ClubMemberController {
         // 🚩 查询所有 join_status = 0 (申请中) 的记录
         List<ClubMember> list = clubMemberService.list(
                 new LambdaQueryWrapper<ClubMember>().eq(ClubMember::getJoinStatus, 0)
+        );
+        return Result.success(list);
+    }
+
+    @GetMapping("/my")
+    public Result<List<ClubMember>> getMyClubs(@RequestParam Long userId) {
+        // 🚩 核心逻辑：查询该用户下 joinStatus = 1 的所有记录
+        List<ClubMember> list = clubMemberService.list(
+                new LambdaQueryWrapper<ClubMember>()
+                        .eq(ClubMember::getUserId, userId)
+                        .eq(ClubMember::getJoinStatus, 1) // 1 表示已加入
         );
         return Result.success(list);
     }

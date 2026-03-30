@@ -9,6 +9,12 @@
           </el-icon>
           <span>首页看板</span>
         </el-menu-item>
+        <el-menu-item index="/my-clubs">
+          <el-icon>
+            <User />
+          </el-icon>
+          <span>我的社团</span>
+        </el-menu-item>
         <el-menu-item index="/user-manage">
           <el-icon>
             <User />
