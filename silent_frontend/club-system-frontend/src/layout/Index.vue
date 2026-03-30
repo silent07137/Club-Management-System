@@ -27,6 +27,12 @@
           </el-icon>
           <span>社团广场</span>
         </el-menu-item>
+        <el-menu-item index="/audit">
+          <el-icon>
+            <Checked />
+          </el-icon>
+          <span>入社审批</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -54,7 +60,7 @@
 </template>
 
 <script setup>
-import { Menu, Bell, HomeFilled, User, Calendar, ArrowDown } from '@element-plus/icons-vue'
+import { Menu, Checked, Bell, HomeFilled, User, Calendar, ArrowDown } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
