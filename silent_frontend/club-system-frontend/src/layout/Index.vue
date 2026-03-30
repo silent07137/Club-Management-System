@@ -15,11 +15,12 @@
           </el-icon>
           <span>我的社团</span>
         </el-menu-item>
-        <el-menu-item index="/user-manage">
-          <el-icon>
-            <User />
-          </el-icon>
-          <span>成员管理</span>
+        <template v-if="isAdmin">
+          <el-menu-item index="/user-manage">成员账号管理</el-menu-item>
+          <el-menu-item index="/club-audit">社团开办审批</el-menu-item>
+        </template>
+        <el-menu-item v-if="!isAdmin && !isLeader" index="/apply-club">
+          申请创建社团
         </el-menu-item>
         <el-menu-item index="/activity">
           <el-icon>
@@ -33,11 +34,8 @@
           </el-icon>
           <span>社团广场</span>
         </el-menu-item>
-        <el-menu-item index="/audit">
-          <el-icon>
-            <Checked />
-          </el-icon>
-          <span>入社审批</span>
+        <el-menu-item v-if="isAdmin || isLeader" index="/audit">
+          入社成员审批
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -68,7 +66,11 @@
 <script setup>
 import { Menu, Checked, Bell, HomeFilled, User, Calendar, ArrowDown } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
+const user = JSON.parse(localStorage.getItem('user') || '{}')
 
+// 权限判定逻辑
+const isAdmin = user.role === 'ROLE_ADMIN'
+const isLeader = user.isLeader === true
 const router = useRouter()
 const handleLogout = () => {
   router.push('/login')

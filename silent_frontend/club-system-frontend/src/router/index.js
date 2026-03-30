@@ -50,6 +50,16 @@ const routes = [
         component: () => import('../views/MyClubs.vue')
       },
       {
+        path: 'club-audit', // 🚩 管理员审批新社团的页面
+        name: 'ClubAudit',
+        component: () => import('../views/ClubAudit.vue')
+      },
+      {
+        path: 'apply-club',
+        name: 'ApplyClub',
+        component: () => import('../views/ApplyClub.vue')
+      },
+      {
         path: 'club-detail/:id', // :id 是一个占位符，用来接收社团ID
         name: 'ClubDetail',
         component: () => import('../views/ClubDetail.vue')
