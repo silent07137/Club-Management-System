@@ -1,0 +1,27 @@
+server:
+  port: 8080 # 后端服务端口
+
+spring:
+  datasource:
+    # 数据库连接配置 (注意修改为你的数据库密码)
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/club_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: 071370 # 【这里改成你本地 MySQL 的密码】
+
+  # Redis 配置 (默认本地 6379，无密码)
+  redis:
+    host: localhost
+    port: 6379
+    password: # 如果你的 redis 有密码填这里，没有就留空
+    database: 0
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml # XML映射文件所在路径
+  global-config:
+    db-config:
+      id-type: auto # 全局主键自增策略
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰命名转换 (如 user_id -> userId)
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 在控制台打印 SQL 语句，方便调试s
