@@ -62,8 +62,9 @@ const handleSubmit = async () => {
     const res = await request.post(url, form)
     
     if (res.code === 200) {
-      ElMessage.success(res.message)
-      // 🚩 核心逻辑：登录或注册成功后，直接跳转到后台首页
+      localStorage.setItem("token", res.data.token) // 你现在可能只写了这一行
+      localStorage.setItem("user", JSON.stringify(res.data)) // 必须加上这一行！
+      ElMessage.success("欢迎回来")
       router.push('/home') 
     }
   } catch (error) {

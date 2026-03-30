@@ -11,16 +11,16 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-@TableName("club")
-public class Club {
-    @TableId(value = "club_id", type = IdType.AUTO)
-    private Long clubId;
-
-    private String name;        // 对应数据库 name
-    private String description; // 对应数据库 description
-    private Long leaderId;      // 对应数据库 leader_id (社长ID)
-    private Integer status;     // 对应数据库 status (1-正常, 0-关闭)
-
+@TableName("notification")
+public class Notification {
+    @TableId(value = "notify_id", type = IdType.AUTO)
+    private Long notifyId;
+    
+    private Long userId;
+    private String content;
+    private Integer type;   // 1系统消息, 2活动提醒, 3积分变动
+    private Integer isRead; // 0未读, 1已读
+    
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 }

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 
 import lombok.Getter;
@@ -64,5 +65,6 @@ public class User implements Serializable {
      */
     private LocalDateTime createTime;
 
-
+    @TableField("global_role")
+    private Integer globalRole; // 系统角色: 0超级管理员, 1普通学生
 }

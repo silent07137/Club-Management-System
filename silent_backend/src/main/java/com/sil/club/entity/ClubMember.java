@@ -11,16 +11,17 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-@TableName("club")
-public class Club {
-    @TableId(value = "club_id", type = IdType.AUTO)
+@TableName("club_member")
+public class ClubMember {
+    @TableId(value = "member_id", type = IdType.AUTO)
+    private Long memberId;
+    
     private Long clubId;
-
-    private String name;        // 对应数据库 name
-    private String description; // 对应数据库 description
-    private Long leaderId;      // 对应数据库 leader_id (社长ID)
-    private Integer status;     // 对应数据库 status (1-正常, 0-关闭)
-
+    private Long userId;
+    
+    private Integer roleType;   // 1社长, 2管理组, 3普通成员
+    private Integer joinStatus; // 0申请中, 1已加入, 2已拒绝
+    
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 }

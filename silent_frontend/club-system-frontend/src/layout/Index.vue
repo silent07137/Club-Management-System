@@ -1,31 +1,38 @@
 <template>
   <el-container class="layout-container">
     <el-aside width="200px">
-      <el-menu
-        default-active="1"
-        class="el-menu-vertical"
-        background-color="#304156"
-        text-color="#fff"
-        router
-      >
+      <el-menu default-active="1" class="el-menu-vertical" background-color="#304156" text-color="#fff" router>
         <h3 style="color: white; text-align: center; padding: 20px 0;">社团管理系统</h3>
         <el-menu-item index="/home">
-          <el-icon><HomeFilled /></el-icon>
+          <el-icon>
+            <HomeFilled />
+          </el-icon>
           <span>首页看板</span>
         </el-menu-item>
         <el-menu-item index="/user-manage">
-          <el-icon><User /></el-icon>
+          <el-icon>
+            <User />
+          </el-icon>
           <span>成员管理</span>
         </el-menu-item>
         <el-menu-item index="/activity">
-          <el-icon><Calendar /></el-icon>
+          <el-icon>
+            <Calendar />
+          </el-icon>
           <span>社团活动</span>
+        </el-menu-item>
+        <el-menu-item index="/clubs">
+          <el-icon>
+            <Menu />
+          </el-icon>
+          <span>社团广场</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
 
     <el-container>
-      <el-header style="border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between;">
+      <el-header
+        style="border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between;">
         <span>智慧校园 / 首页</span>
         <el-dropdown>
           <span class="el-dropdown-link" style="cursor: pointer;">
@@ -47,7 +54,7 @@
 </template>
 
 <script setup>
-import { HomeFilled, User, Calendar, ArrowDown } from '@element-plus/icons-vue'
+import { Menu, Bell, HomeFilled, User, Calendar, ArrowDown } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -60,6 +67,7 @@ const handleLogout = () => {
 .layout-container {
   height: 100vh;
 }
+
 .el-menu-vertical {
   height: 100%;
 }
