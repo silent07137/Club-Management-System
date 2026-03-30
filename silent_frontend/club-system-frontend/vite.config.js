@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/Club-Management-System/',
   plugins: [vue()],
   server: {
     port: 5173, // 确保前端跑在这个端口
