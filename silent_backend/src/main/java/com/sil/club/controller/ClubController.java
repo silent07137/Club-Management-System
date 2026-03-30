@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping; // 确认这个路径和你项目一致
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,5 +24,16 @@ public class ClubController {
     public Result<List<Club>> list() {
         // 获取 status=1 的社团
         return Result.success(clubService.list(new LambdaQueryWrapper<Club>().eq(Club::getStatus, 1)));
+    }
+
+    // 根据ID查询社团详情
+    @GetMapping("/{id}")
+    public Result<Club> getById(@PathVariable Long id) {
+        // MyBatis-Plus 自带的 getById 方法
+        Club club = clubService.getById(id);
+        if (club != null) {
+            return Result.success(club);
+        }
+        return Result.error("社团不存在");
     }
 }

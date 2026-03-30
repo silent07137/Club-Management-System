@@ -1,5 +1,7 @@
 package com.sil.club.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -105,13 +107,27 @@ public class ClubMemberController {
     }
 
     @GetMapping("/my")
-    public Result<List<ClubMember>> getMyClubs(@RequestParam Long userId) {
-        // 🚩 核心逻辑：查询该用户下 joinStatus = 1 的所有记录
-        List<ClubMember> list = clubMemberService.list(
+    public Result<List<Map<String, Object>>> getMyClubs(@RequestParam Long userId) {
+        List<ClubMember> members = clubMemberService.list(
                 new LambdaQueryWrapper<ClubMember>()
                         .eq(ClubMember::getUserId, userId)
-                        .eq(ClubMember::getJoinStatus, 1) // 1 表示已加入
+                        .eq(ClubMember::getJoinStatus, 1)
         );
-        return Result.success(list);
+
+        List<Map<String, Object>> resultList = new ArrayList<>();
+        for (ClubMember m : members) {
+            Map<String, Object> map = new HashMap<>();
+            Club club = clubService.getById(m.getClubId());
+
+            // 🚩 关键修复：一定要把 clubId 存进去！
+            map.put("clubId", m.getClubId());
+
+            map.put("memberId", m.getMemberId());
+            map.put("clubName", club != null ? club.getName() : "未知社团");
+            map.put("roleType", m.getRoleType());
+            map.put("createTime", m.getCreateTime());
+            resultList.add(map);
+        }
+        return Result.success(resultList);
     }
 }

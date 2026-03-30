@@ -48,6 +48,11 @@ const routes = [
         path: 'my-clubs',
         name: 'MyClubs',
         component: () => import('../views/MyClubs.vue')
+      },
+      {
+        path: 'club-detail/:id', // :id 是一个占位符，用来接收社团ID
+        name: 'ClubDetail',
+        component: () => import('../views/ClubDetail.vue')
       }
     ]
   }
