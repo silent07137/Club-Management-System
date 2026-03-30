@@ -1,6 +1,6 @@
 <template>
   <div style="padding: 20px;">
-    <h2>👋 欢迎回来，超级管理员！</h2>
+    <h2>👋 欢迎回来！</h2>
     <p style="color: #666; margin-bottom: 30px;">这是您的社团管理专属数据看板</p>
 
     <el-row :gutter="20">
