@@ -100,7 +100,7 @@ const loadClubDetail = async () => {
 }
 
 const goBack = () => {
-    router.push('/home/my-clubs')
+    router.back()
 }
 
 onMounted(() => {
