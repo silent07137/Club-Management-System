@@ -65,10 +65,9 @@ const dialogVisible = ref(false)
 
 const loadData = async () => {
   try {
-    // Axios 的 GET 请求，参数要写在 params 里
     const res = await request.get('/activity/list', {
       params: {
-        title: searchTitle.value // 把搜索框里的字传给后端
+        title: searchTitle.value
       }
     }) 
     if (res.code === 200) {
@@ -80,7 +79,6 @@ const loadData = async () => {
 }
 
 const handleDelete = (id) => {
-  // 🚩 加这一句监控：看看点击时到底有没有拿到 ID
   console.log("👉 点击了删除按钮，当前行的 ID 是：", id)
 
   if (!id) {
@@ -109,13 +107,13 @@ const form = reactive({
   title: '',
   location: '',
   status: 1,
-  clubId: 1, // 默认挂在ID为1的社团下
+  clubId: 1,
   startTime: '2026-05-01 10:00:00', // 默认开始时间
   endTime: '2026-05-01 12:00:00'    // 默认结束时间
 })
-// 🚩 点击新增按钮，打开弹窗并清空表单
+
 const handleAdd = () => {
-  form.activityId = undefined // 🚩 关键：清空 ID，证明这是新数据
+  form.activityId = undefined
   form.title = ''
   form.location = ''
   form.status = 1
@@ -123,33 +121,27 @@ const handleAdd = () => {
 }
 
 const handleEdit = (row) => {
-  // Object.assign 会把 row 里的数据复制到 form 里，这样弹窗一开就有数据了
   Object.assign(form, row)
   dialogVisible.value = true
 }
 
-// 🚩 点击确认保存，发送 POST 请求给后端
 const handleSave = async () => {
   if (!form.title || !form.location) {
     ElMessage.warning('名称和地点不能为空哦！')
     return
   }
-
   try {
     let res;
-    // 🚩 核心逻辑：判断表单里有没有 activityId
     if (form.activityId) {
-      // 有 ID，说明是旧数据，发 PUT 请求去修改
       res = await request.put('/activity/update', form)
     } else {
-      // 没 ID，说明是新数据，发 POST 请求去新增
       res = await request.post('/activity/add', form)
     }
 
     if (res.code === 200) {
       ElMessage.success(form.activityId ? '修改成功！' : '新增成功！')
       dialogVisible.value = false
-      loadData() // 刷新表格
+      loadData()
     } else {
       ElMessage.error(res.message)
     }
@@ -157,7 +149,7 @@ const handleSave = async () => {
     console.error(error)
   }
 }
-// 页面加载时执行
+
 onMounted(() => {
   loadData()
 })

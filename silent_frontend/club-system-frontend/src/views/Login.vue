@@ -37,9 +37,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue' // 🚩 修正：引入 reactive
+import { ref, reactive } from 'vue' 
 import { useRouter } from 'vue-router'
-import request from '../utils/request' // 🚩 注意：这里路径多了个 ../
+import request from '../utils/request'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -62,8 +62,8 @@ const handleSubmit = async () => {
     const res = await request.post(url, form)
     
     if (res.code === 200) {
-      localStorage.setItem("token", res.data.token) // 你现在可能只写了这一行
-      localStorage.setItem("user", JSON.stringify(res.data)) // 必须加上这一行！
+      localStorage.setItem("token", res.data.token)
+      localStorage.setItem("user", JSON.stringify(res.data))
       ElMessage.success("欢迎回来")
       router.push('/home') 
     }

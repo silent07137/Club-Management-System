@@ -62,26 +62,22 @@ const loadData = async () => {
 
 
 const handleDelete = (id) => {
-  // 🚩 加一行打印，看看到底传进来了什么
   console.log("👉 点击了踢出按钮，传进来的 ID 是：", id)
-  
-  // 🚩 把悄悄退出改成大声报错
   if (!id) {
     ElMessage.error('糟糕！拿不到这个人的 ID，请检查绑定的字段名是不是写错了！')
     return
   }
-  // 弹窗再次确认，防止手滑踢错人
+
   ElMessageBox.confirm('确定要将该成员踢出社团吗？此操作不可恢复！', '高危操作', {
     confirmButtonText: '狠心踢出',
     cancelButtonText: '手滑了',
     type: 'warning',
   }).then(async () => {
     try {
-      // 🚩 发送 DELETE 请求给后端的 /user/delete/{id}
       const res = await request.delete(`/user/delete/${id}`)
       if (res.code === 200) {
         ElMessage.success('已成功踢出该成员！')
-        loadData() // 踢完人之后，重新向后端要一次数据，刷新表格
+        loadData()
       } else {
         ElMessage.error(res.message)
       }
@@ -94,7 +90,6 @@ const handleDelete = (id) => {
   })
 }
 
-// 页面一加载就去查数据
 onMounted(() => {
   loadData()
 })

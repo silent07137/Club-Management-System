@@ -42,7 +42,6 @@ import { ref, onMounted } from 'vue'
 import request from '../utils/request'
 import { ElMessage } from 'element-plus'
 
-// 存放统计数据的变量，默认给个 0
 const statsData = ref({
   userCount: 0,
   activityCount: 0
@@ -55,7 +54,7 @@ const loadStats = async () => {
     const res = await request.get('/stats/info')
     console.log("后端返回的数据是：", res)
     if (res.code === 200) {
-      statsData.value = res.data // 把后端查到的真实数字赋给页面
+      statsData.value = res.data
     } else {
       ElMessage.error(res.message)
     }
@@ -64,7 +63,6 @@ const loadStats = async () => {
   }
 }
 
-// 页面一加载，就去拉取数据
 onMounted(() => {
   loadStats()
 })

@@ -21,18 +21,17 @@
 
 <script setup>
 import { ref } from 'vue'
-import request from '../utils/request' // 🚩 必须有这一行！
+import request from '../utils/request'
 import { ElMessage } from 'element-plus'
 
 const user = JSON.parse(localStorage.getItem('user') || '{}')
 const form = ref({
   name: '',
   description: '',
-  leaderId: user.userId // 🚩 这里的字段名必须和后端实体类一致
+  leaderId: user.userId
 })
 
 const submitApply = async () => {
-  // 必须确保后端 @RequestMapping 是 /club
   const res = await request.post('/club/apply', form.value)
   if (res.code === 200) {
     ElMessage.success('提交成功，等待管理员审核')

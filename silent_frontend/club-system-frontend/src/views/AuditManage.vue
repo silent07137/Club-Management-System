@@ -37,7 +37,6 @@ const loadApplyList = async () => {
   loading.value = true
   try {
     const res = await request.get('/club/member/list/pending')
-    // 🚩 注意：这里要用 == 200，因为后端返回的是数字
     if (res.code == 200) {
       applyList.value = res.data
     }
@@ -56,7 +55,7 @@ const handleAudit = async (id, status) => {
     })
     if (res.code == 200) {
       ElMessage.success("处理成功！")
-      loadApplyList() // 刷新列表，处理完的记录就会消失
+      loadApplyList()
     }
   } catch (error) {
     ElMessage.error("系统异常")

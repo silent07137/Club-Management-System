@@ -51,7 +51,6 @@ const loadMyClubs = async () => {
     }
 }
 const goDetail = (id) => {
-    // 使用模板字符串把 ID 塞进路径里
     router.push(`/home/club-detail/${id}`)
 }
 

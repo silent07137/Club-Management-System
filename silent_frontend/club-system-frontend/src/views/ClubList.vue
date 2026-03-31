@@ -48,7 +48,6 @@ const loadClubs = async () => {
     loading.value = true
     try {
         const res = await request.get('/club/list')
-        // 🚩 修改点：使用 == (两个等号) 兼容数字和字符串，并检查 res.code 是否存在
         if (res.code == 200) {
             clubList.value = res.data
             console.log("社团列表已加载：", clubList.value)
@@ -73,7 +72,7 @@ const handleApply = (club) => {
     ElMessageBox.confirm(`确定申请加入【${club.name}】吗？`, '提示', { type: 'info' })
         .then(async () => {
             const res = await request.post('/club/member/apply', {
-                userId: finalUserId, // 🚩 确保这里传的是有值的变量
+                userId: finalUserId, 
                 clubId: club.clubId
             })
 

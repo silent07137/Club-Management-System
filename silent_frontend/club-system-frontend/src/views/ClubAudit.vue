@@ -31,7 +31,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const pendingClubs = ref([])
 const loading = ref(false)
 
-// 🚩 获取待审核列表 (status = 0)
 const loadPending = async () => {
     loading.value = true
     try {
@@ -46,22 +45,19 @@ const loadPending = async () => {
     }
 }
 
-// 🚩 执行审批操作
 const handleApprove = (row) => {
     ElMessageBox.confirm(
         `确定准许【${row.name}】开办吗？通过后该申请人将自动晋升为社长。`,
         '审批确认',
         { confirmButtonText: '通过', cancelButtonText: '取消', type: 'success' }
     ).then(async () => {
-        // 这里的参数名根据后端控制器的接收方式调整
         const res = await request.post('/club/approve', {
-            clubId: row.clubId, // 🚩 注意：这里使用你在数据库截图中展示的 club_id
+            clubId: row.clubId,
             userId: row.leaderId
         })
-
         if (res.code === 200) {
             ElMessage.success('审批成功，社团已激活')
-            loadPending() // 刷新列表
+            loadPending()
         }
     }).catch(() => { })
 }
@@ -73,15 +69,14 @@ const handleReject = (row) => {
     inputPattern: /\S+/,
     inputErrorMessage: '理由不能为空',
   }).then(async ({ value }) => {
-    // 调用拒绝接口
     const res = await request.post('/club/reject', { 
       clubId: row.clubId, 
       reason: value 
     })
     
     if (res.code === 200) {
-      ElMessage.error('申请已驳回') // 这里的颜色建议用 error (红色) 对应拒绝动作
-      loadPending() // 刷新列表
+      ElMessage.error('申请已驳回')
+      loadPending()
     }
   }).catch(() => {})
 }

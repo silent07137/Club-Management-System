@@ -187,7 +187,7 @@ const handleDisbandClub = () => {
     ElMessageBox.confirm('确定要解散该社团吗？所有成员将被移出，此操作不可恢复！', '高危操作确认', {
         confirmButtonText: '确定解散',
         cancelButtonText: '取消',
-        type: 'error', // 用 error 颜色更醒目
+        type: 'error', 
     }).then(async () => {
         const res = await request.delete(`/club/delete/${route.params.id}`)
         if (res.code === 200) {
@@ -224,7 +224,7 @@ const handleAudit = (memberId, status) => {
         type: status === 1 ? 'success' : 'warning'
     }).then(async () => {
         const res = await request.post('/club/audit', {
-            id: memberId, // 对应后端的 params.get("id")
+            id: memberId, 
             status: status
         })
 
