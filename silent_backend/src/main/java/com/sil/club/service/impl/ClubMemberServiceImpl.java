@@ -3,6 +3,7 @@ package com.sil.club.service.impl;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sil.club.entity.ClubMember;
 import com.sil.club.mapper.ClubMemberMapper;
@@ -80,5 +81,26 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
         newMember.setJoinStatus(0);  // 等待审批
 
         return this.save(newMember);
+    }
+
+    @Override
+    public boolean quitClub(Long clubId, Long userId) {
+        // 1. 先查出当前用户在这个社团的成员信息
+        QueryWrapper<ClubMember> wrapper = new QueryWrapper<>();
+        wrapper.eq("club_id", clubId).eq("user_id", userId);
+        ClubMember member = this.getOne(wrapper);
+
+        if (member == null) {
+            return false; // 根本不在社团里
+        }
+
+        // 2. 核心校验：如果是社长（假设 roleType == 1 代表社长），禁止退出
+        if (member.getRoleType() != null && member.getRoleType() == 1) {
+            throw new RuntimeException("社长不能退出社团，请直接解散社团");
+            // 如果你的项目有统一的业务异常类 (如 BusinessException)，建议抛出你们自定义的异常
+        }
+
+        // 3. 普通成员，正常删除记录
+        return this.remove(wrapper);
     }
 }

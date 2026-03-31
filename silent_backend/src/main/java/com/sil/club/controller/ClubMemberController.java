@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -118,10 +119,7 @@ public class ClubMemberController {
         for (ClubMember m : members) {
             Map<String, Object> map = new HashMap<>();
             Club club = clubService.getById(m.getClubId());
-
-            // 🚩 关键修复：一定要把 clubId 存进去！
             map.put("clubId", m.getClubId());
-
             map.put("memberId", m.getMemberId());
             map.put("clubName", club != null ? club.getName() : "未知社团");
             map.put("roleType", m.getRoleType());
@@ -129,5 +127,16 @@ public class ClubMemberController {
             resultList.add(map);
         }
         return Result.success(resultList);
+    }
+
+    // 退出社团接口
+    @DeleteMapping("/quit")
+    public Result quitClub(@RequestParam Long clubId, @RequestParam Long userId) {
+        boolean success = clubMemberService.quitClub(clubId, userId);
+        if (success) {
+            return Result.success("已成功退出该社团");
+        } else {
+            return Result.error("退出失败，您可能不在此社团中");
+        }
     }
 }

@@ -5,6 +5,15 @@
                 <template #content>
                     <span class="header-title"> {{ club.name }} - 社团主页 </span>
                 </template>
+                <template #extra>
+                    <el-button v-if="isPresident" type="danger" @click="handleDisbandClub">
+                        解散社团
+                    </el-button>
+
+                    <el-button v-else type="warning" plain @click="handleQuitClub">
+                        退出社团
+                    </el-button>
+                </template>
             </el-page-header>
         </div>
 
@@ -72,27 +81,34 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import request from '../utils/request'
 import { InfoFilled, Calendar, User } from '@element-plus/icons-vue'
-
-const route = useRoute()   // 获取路由参数对象
-const router = useRouter() // 执行路由跳转对象
+const user = JSON.parse(localStorage.getItem('user') || '{}')
+const currentUserId = user.id || user.userId
+const route = useRoute()
+const router = useRouter()
 
 const club = ref({})
 const loading = ref(false)
 
-// 🚩 核心逻辑：加载社团详情
+
+const isPresident = computed(() => {
+    return club.value.leaderId == currentUserId
+})
+
 const loadClubDetail = async () => {
     loading.value = true
-    // 从动态路由路径 club-detail/:id 中拿到 id
     const clubId = route.params.id
     console.log("准备请求的ID是:", clubId)
     try {
         const res = await request.get(`/club/${clubId}`)
         if (res.code == 200) {
             club.value = res.data
+            console.log("当前登录的用户ID是:", currentUserId, "类型:", typeof currentUserId)
+            console.log("后端返回的社团信息是:", club.value)
         }
     } finally {
         loading.value = false
@@ -106,6 +122,38 @@ const goBack = () => {
 onMounted(() => {
     loadClubDetail()
 })
+
+const handleQuitClub = () => {
+    ElMessageBox.confirm('确定要退出该社团吗？', '退出确认', {
+        type: 'warning',
+    }).then(async () => {
+        const res = await request.delete('/club/member/quit', {
+            params: { clubId: route.params.id, userId: currentUserId }
+        })
+        if (res.code === 200) {
+            ElMessage.success('已退出社团')
+            router.back()
+        } else {
+            ElMessage.error(res.msg || '退出失败')
+        }
+    }).catch(() => { })
+}
+
+const handleDisbandClub = () => {
+    ElMessageBox.confirm('确定要解散该社团吗？所有成员将被移出，此操作不可恢复！', '高危操作确认', {
+        confirmButtonText: '确定解散',
+        cancelButtonText: '取消',
+        type: 'error', // 用 error 颜色更醒目
+    }).then(async () => {
+        const res = await request.delete(`/club/delete/${route.params.id}`)
+        if (res.code === 200) {
+            ElMessage.success('社团已成功解散')
+            router.back()
+        } else {
+            ElMessage.error(res.msg || '解散失败')
+        }
+    }).catch(() => { })
+}
 </script>
 
 <style scoped>

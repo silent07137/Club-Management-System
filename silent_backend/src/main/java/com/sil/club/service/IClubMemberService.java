@@ -12,4 +12,6 @@ public interface IClubMemberService extends IService<ClubMember> {
 
     // 3. 处理入社申请
     boolean applyToJoin(Long userId, Long clubId);
+
+    boolean quitClub(Long clubId, Long userId);
 }
