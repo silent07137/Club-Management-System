@@ -11,7 +11,7 @@
  Target Server Version : 80045 (8.0.45)
  File Encoding         : 65001
 
- Date: 30/03/2026 23:17:25
+ Date: 31/03/2026 22:27:04
 */
 
 SET NAMES utf8mb4;
@@ -36,6 +36,10 @@ CREATE TABLE `activity`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '活动表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Records of activity
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for club
 -- ----------------------------
 DROP TABLE IF EXISTS `club`;
@@ -47,7 +51,11 @@ CREATE TABLE `club`  (
   `status` tinyint NULL DEFAULT 0 COMMENT '状态: 0待审核, 1已通过, 2已拒绝',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`club_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社团表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社团表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of club
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for club_member
@@ -63,7 +71,11 @@ CREATE TABLE `club_member`  (
   PRIMARY KEY (`member_id`) USING BTREE,
   UNIQUE INDEX `uk_club_user`(`club_id` ASC, `user_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社团成员关系表(用户组)' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '社团成员关系表(用户组)' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of club_member
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for notification
@@ -78,7 +90,11 @@ CREATE TABLE `notification`  (
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`notify_id`) USING BTREE,
   INDEX `idx_user_read`(`user_id` ASC, `is_read` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '系统通知表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '系统通知表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of notification
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for point_record
@@ -93,6 +109,10 @@ CREATE TABLE `point_record`  (
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`record_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '积分流水表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of point_record
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for registration
@@ -110,6 +130,10 @@ CREATE TABLE `registration`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '报名记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Records of registration
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for user
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
@@ -125,6 +149,11 @@ CREATE TABLE `user`  (
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`user_id`) USING BTREE,
   UNIQUE INDEX `uk_student_id`(`student_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of user
+-- ----------------------------
+INSERT INTO `user` VALUES (1, '123456', 'admin', '123456', NULL, 'ROLE_ADMIN', 0, 0, '2026-03-31 22:26:47');
 
 SET FOREIGN_KEY_CHECKS = 1;
