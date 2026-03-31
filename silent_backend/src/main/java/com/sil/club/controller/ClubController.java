@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController; // 确认这个路径和你项目一致
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.sil.club.entity.Club;
 import com.sil.club.entity.ClubMember;
+import com.sil.club.mapper.ClubMemberMapper;
 import com.sil.club.service.IClubMemberService;
 import com.sil.club.service.IClubService;
 import com.sil.club.vo.Result;
@@ -30,6 +30,8 @@ public class ClubController {
     private IClubService clubService;
     @Autowired
     private IClubMemberService clubMemberService;
+    @Autowired
+    private ClubMemberMapper clubMemberMapper;
 
     @GetMapping("/list")
     public Result<List<Club>> list() {
@@ -112,12 +114,11 @@ public class ClubController {
             return Result.error("删除失败，社团可能不存在");
         }
     }
-    // 获取当前社团的待审核列表 (joinStatus = 0)
+
     @GetMapping("/pending")
     public Result getPendingList(@RequestParam Long clubId) {
-        QueryWrapper<ClubMember> wrapper = new QueryWrapper<>();
-        wrapper.eq("club_id", clubId).eq("join_status", 0);
-        List<ClubMember> list = clubMemberService.list(wrapper);
+        // 调用连表查询：状态传 0
+        List<Map<String, Object>> list = clubMemberMapper.selectMemberWithUserInfo(clubId, 0);
         return Result.success(list);
     }
 
@@ -132,6 +133,24 @@ public class ClubController {
             return Result.success("审批完成");
         } else {
             return Result.error(500, "审批失败，该申请可能已处理");
+        }
+    }
+
+    @GetMapping("/members")
+    public Result getMemberList(@RequestParam Long clubId) {
+        // 调用连表查询：状态传 1
+        List<Map<String, Object>> list = clubMemberMapper.selectMemberWithUserInfo(clubId, 1);
+        return Result.success(list);
+    }
+
+    @DeleteMapping("/kick/{memberId}")
+    public Result kickMember(@PathVariable("memberId") Long memberId) {
+        // 直接删除该成员的关联记录
+        boolean success = clubMemberService.removeById(memberId);
+        if (success) {
+            return Result.success("已将该成员移出社团");
+        } else {
+            return Result.error(500, "操作失败，成员可能已不存在");
         }
     }
 }

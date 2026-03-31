@@ -60,10 +60,6 @@ public class ClubMemberController {
         }
     }
 
-    /**
-     * 2. 社长审批申请 (顺手把这个也写了，逻辑才完整) 前端传参：{ "memberId": 100, "status": 1 } // 1-同意,
-     * 2-拒绝
-     */
     @PostMapping("/audit")
     public Result<String> audit(@RequestBody Map<String, Object> params) {
         // 🚩 修复 1：将 "status" 改为与前端一致的 "joinStatus"

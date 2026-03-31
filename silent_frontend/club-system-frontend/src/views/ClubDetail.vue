@@ -38,7 +38,7 @@
                             <Calendar />
                         </el-icon>
                         <span class="label">成立时间：</span>
-                        <span class="content">{{ club.createTime || '2024-01-01' }}</span>
+                        <span class="content">{{ club.createTime }}</span>
                     </div>
                     <div class="detail-item">
                         <el-icon>
@@ -71,22 +71,45 @@
                     <el-tab-pane label="🖼️ 社团相册">
                         <el-empty description="暂无照片" />
                     </el-tab-pane>
-                    <el-tab-pane label="👥 成员列表">
-                        <p>成员功能正在开发中...</p>
-                    </el-tab-pane>
                     <el-tab-pane label="📥 成员审批" v-if="isPresident">
-                        <el-table :data="pendingList" style="width: 100%" v-loading="auditLoading"
-                            empty-text="暂无待审批的申请">
+                        <el-table :data="pendingList" style="width: 100%" v-loading="auditLoading">
                             <el-table-column prop="userId" label="申请人ID" width="100" align="center" />
-                            <el-table-column prop="reason" label="申请理由" />
-                            <el-table-column prop="createTime" label="申请时间" width="180" align="center" />
+                            <el-table-column prop="name" label="申请人姓名" width="120" align="center" />
+                            <el-table-column prop="create_time" label="申请时间" width="180" align="center">
+                                <template #default="scope">
+                                    {{ scope.row.createTime ? scope.row.createTime.replace('T', ' ') : '尚未记录时间' }}
+                                </template>
+                            </el-table-column>
+
                             <el-table-column label="操作" width="180" align="center">
                                 <template #default="scope">
-                                    <el-button type="success" size="small" @click="handleAudit(scope.row.memberId, 1)">
-                                        通过
-                                    </el-button>
-                                    <el-button type="danger" size="small" @click="handleAudit(scope.row.memberId, 2)">
-                                        拒绝
+                                    <el-button type="success" size="small"
+                                        @click="handleAudit(scope.row.member_id, 1)">通过</el-button>
+                                    <el-button type="danger" size="small"
+                                        @click="handleAudit(scope.row.member_id, 2)">拒绝</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-tab-pane>
+                    <el-tab-pane label="👥 成员列表">
+                        <el-table :data="memberList" style="width: 100%" empty-text="社团还没有成员">
+                            <el-table-column prop="userId" label="用户ID" width="120" align="center" />
+                            <el-table-column prop="name" label="成员名称" width="120" align="center" />
+                            <el-table-column label="社团角色" width="120" align="center">
+                                <template #default="scope">
+                                    <el-tag v-if="scope.row.roleType === 1" type="danger" effect="dark">社长</el-tag>
+                                    <el-tag v-else-if="scope.row.roleType === 2" type="warning">管理员</el-tag>
+                                    <el-tag v-else type="info">普通成员</el-tag>
+                                </template>
+                            </el-table-column>
+
+                            <el-table-column prop="createTime" label="加入时间" align="center" />
+
+                            <el-table-column label="操作" width="120" align="center" v-if="isPresident">
+                                <template #default="scope">
+                                    <el-button v-if="scope.row.roleType !== 1" type="danger" size="small" plain
+                                        @click="handleKick(scope.row.memberId)">
+                                        移出社团
                                     </el-button>
                                 </template>
                             </el-table-column>
@@ -112,7 +135,7 @@ const pendingList = ref([])
 const auditLoading = ref(false)
 const club = ref({})
 const loading = ref(false)
-
+const memberList = ref([])
 
 const isPresident = computed(() => {
     return club.value.leaderId == currentUserId
@@ -139,8 +162,9 @@ const goBack = () => {
 }
 
 onMounted(async () => {
-    await loadClubDetail() // 先等社团详情加载完，确定 isPresident 的值
-    loadPendingList()      // 再根据是不是社长，决定要不要拉取审批列表
+    await loadClubDetail()
+    loadPendingList()
+    loadMemberList()
 })
 
 const handleQuitClub = () => {
@@ -194,7 +218,7 @@ const loadPendingList = async () => {
 }
 
 // 处理通过/拒绝
-const handleAudit = (memberId, status) => { // 参数名我换成了 memberId，方便阅读
+const handleAudit = (memberId, status) => {
     const actionText = status === 1 ? '通过' : '拒绝'
     ElMessageBox.confirm(`确定要 ${actionText} 该用户的申请吗？`, '审批确认', {
         type: status === 1 ? 'success' : 'warning'
@@ -209,6 +233,35 @@ const handleAudit = (memberId, status) => { // 参数名我换成了 memberId，
             loadPendingList() // 操作成功后刷新列表
         } else {
             ElMessage.error(res.msg || '审批失败')
+        }
+    }).catch(() => { })
+}
+
+const loadMemberList = async () => {
+    try {
+        const res = await request.get('/club/members', {
+            params: { clubId: route.params.id }
+        })
+        if (res.code === 200) {
+            memberList.value = res.data
+        }
+    } catch (error) {
+        console.error("加载成员列表失败:", error)
+    }
+}
+
+const handleKick = (memberId) => {
+    ElMessageBox.confirm('确定要将该成员移出社团吗？', '踢人确认', {
+        confirmButtonText: '狠心移出',
+        cancelButtonText: '取消',
+        type: 'error',
+    }).then(async () => {
+        const res = await request.delete(`/club/kick/${memberId}`)
+        if (res.code === 200) {
+            ElMessage.success('已移出该成员')
+            loadMemberList() // 操作成功后刷新成员列表
+        } else {
+            ElMessage.error(res.msg || '操作失败')
         }
     }).catch(() => { })
 }
