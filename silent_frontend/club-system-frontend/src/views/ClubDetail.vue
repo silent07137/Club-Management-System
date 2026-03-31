@@ -74,6 +74,24 @@
                     <el-tab-pane label="👥 成员列表">
                         <p>成员功能正在开发中...</p>
                     </el-tab-pane>
+                    <el-tab-pane label="📥 成员审批" v-if="isPresident">
+                        <el-table :data="pendingList" style="width: 100%" v-loading="auditLoading"
+                            empty-text="暂无待审批的申请">
+                            <el-table-column prop="userId" label="申请人ID" width="100" align="center" />
+                            <el-table-column prop="reason" label="申请理由" />
+                            <el-table-column prop="createTime" label="申请时间" width="180" align="center" />
+                            <el-table-column label="操作" width="180" align="center">
+                                <template #default="scope">
+                                    <el-button type="success" size="small" @click="handleAudit(scope.row.memberId, 1)">
+                                        通过
+                                    </el-button>
+                                    <el-button type="danger" size="small" @click="handleAudit(scope.row.memberId, 2)">
+                                        拒绝
+                                    </el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-tab-pane>
                 </el-tabs>
             </el-col>
         </el-row>
@@ -90,7 +108,8 @@ const user = JSON.parse(localStorage.getItem('user') || '{}')
 const currentUserId = user.id || user.userId
 const route = useRoute()
 const router = useRouter()
-
+const pendingList = ref([])
+const auditLoading = ref(false)
 const club = ref({})
 const loading = ref(false)
 
@@ -119,8 +138,9 @@ const goBack = () => {
     router.back()
 }
 
-onMounted(() => {
-    loadClubDetail()
+onMounted(async () => {
+    await loadClubDetail() // 先等社团详情加载完，确定 isPresident 的值
+    loadPendingList()      // 再根据是不是社长，决定要不要拉取审批列表
 })
 
 const handleQuitClub = () => {
@@ -151,6 +171,44 @@ const handleDisbandClub = () => {
             router.back()
         } else {
             ElMessage.error(res.msg || '解散失败')
+        }
+    }).catch(() => { })
+}
+
+// 加载待审批列表
+const loadPendingList = async () => {
+    if (!isPresident.value) return
+
+    auditLoading.value = true
+    try {
+        // 请求该社团下状态为 0 (待审核) 的记录
+        const res = await request.get('/club/pending', {
+            params: { clubId: route.params.id }
+        })
+        if (res.code === 200) {
+            pendingList.value = res.data
+        }
+    } finally {
+        auditLoading.value = false
+    }
+}
+
+// 处理通过/拒绝
+const handleAudit = (memberId, status) => { // 参数名我换成了 memberId，方便阅读
+    const actionText = status === 1 ? '通过' : '拒绝'
+    ElMessageBox.confirm(`确定要 ${actionText} 该用户的申请吗？`, '审批确认', {
+        type: status === 1 ? 'success' : 'warning'
+    }).then(async () => {
+        const res = await request.post('/club/audit', {
+            id: memberId, // 对应后端的 params.get("id")
+            status: status
+        })
+
+        if (res.code === 200) {
+            ElMessage.success(`已${actionText}`)
+            loadPendingList() // 操作成功后刷新列表
+        } else {
+            ElMessage.error(res.msg || '审批失败')
         }
     }).catch(() => { })
 }

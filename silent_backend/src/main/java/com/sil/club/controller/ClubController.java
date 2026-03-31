@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController; // 确认这个路径和你项目一致
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.sil.club.entity.Club;
 import com.sil.club.entity.ClubMember;
 import com.sil.club.service.IClubMemberService;
@@ -21,7 +23,7 @@ import com.sil.club.service.IClubService;
 import com.sil.club.vo.Result;
 
 @RestController
-@RequestMapping("/club") // 🚩 注意：这里只写一个 /club
+@RequestMapping("/club")
 public class ClubController {
 
     @Autowired
@@ -29,7 +31,7 @@ public class ClubController {
     @Autowired
     private IClubMemberService clubMemberService;
 
-    @GetMapping("/list") // 🚩 这个方法必须在大括号里面！
+    @GetMapping("/list")
     public Result<List<Club>> list() {
         // 获取 status=1 的社团
         return Result.success(clubService.list(new LambdaQueryWrapper<Club>().eq(Club::getStatus, 1)));
@@ -108,6 +110,28 @@ public class ClubController {
             return Result.success("社团解散成功");
         } else {
             return Result.error("删除失败，社团可能不存在");
+        }
+    }
+    // 获取当前社团的待审核列表 (joinStatus = 0)
+    @GetMapping("/pending")
+    public Result getPendingList(@RequestParam Long clubId) {
+        QueryWrapper<ClubMember> wrapper = new QueryWrapper<>();
+        wrapper.eq("club_id", clubId).eq("join_status", 0);
+        List<ClubMember> list = clubMemberService.list(wrapper);
+        return Result.success(list);
+    }
+
+    // 审批加入请求
+    @PostMapping("/audit")
+    public Result auditMember(@RequestBody Map<String, Integer> params) {
+        Long memberId = Long.valueOf(params.get("id"));
+        Integer status = params.get("status"); // 1-通过，2-拒绝
+
+        boolean success = clubMemberService.auditMember(memberId, status);
+        if (success) {
+            return Result.success("审批完成");
+        } else {
+            return Result.error(500, "审批失败，该申请可能已处理");
         }
     }
 }

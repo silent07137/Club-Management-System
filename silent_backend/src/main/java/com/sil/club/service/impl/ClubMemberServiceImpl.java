@@ -103,4 +103,25 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
         // 3. 普通成员，正常删除记录
         return this.remove(wrapper);
     }
+    @Override
+    public boolean auditMember(Long memberId, Integer status) {
+        // 1. 获取这条成员关联记录
+        ClubMember member = this.getById(memberId);
+        
+        // 2. 校验：记录是否存在，且必须是“申请中(0)”的状态
+        if (member == null || member.getJoinStatus() != 0) {
+            return false; 
+        }
+
+        // 3. 修改状态
+        member.setJoinStatus(status);
+        
+        // 4. 如果是“通过(1)”，顺便给他分配一个“普通成员(3)”的角色
+        if (status == 1) {
+            member.setRoleType(3);
+        }
+
+        // 5. 保存更新
+        return this.updateById(member);
+    }
 }
