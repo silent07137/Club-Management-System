@@ -1,10 +1,16 @@
 package com.sil.club.service.impl;
 
-import com.sil.club.entity.Club;
-import com.sil.club.mapper.ClubMapper;
-import com.sil.club.service.IClubService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sil.club.entity.Club;
+import com.sil.club.entity.ClubMember;
+import com.sil.club.mapper.ClubMapper;
+import com.sil.club.mapper.ClubMemberMapper;
+import com.sil.club.service.IClubService;
 
 /**
  * <p>
@@ -17,4 +23,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClubServiceImpl extends ServiceImpl<ClubMapper, Club> implements IClubService {
 
+    @Autowired
+    private ClubMemberMapper clubMemberMapper;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class) // 开启事务保证数据一致性
+    public boolean deleteClubWithMembers(Long clubId) {
+        // 1. 删除社团成员关联记录
+        QueryWrapper<ClubMember> wrapper = new QueryWrapper<>();
+        wrapper.eq("club_id", clubId);
+        clubMemberMapper.delete(wrapper);
+
+        // 2. 删除社团本身
+        return this.removeById(clubId);
+    }
 }

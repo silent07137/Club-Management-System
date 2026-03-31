@@ -19,6 +19,9 @@
                             @click="router.push('/club-detail/' + item.clubId)">
                             进入社团
                         </el-button>
+                        <el-button type="danger" size="small" @click="handleDeleteClub(item.clubId)">
+                            删除
+                        </el-button>
                     </div>
                 </el-card>
             </el-col>
@@ -29,6 +32,7 @@
 </template>
 
 <script setup>
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 const router = useRouter()
@@ -54,6 +58,35 @@ const goDetail = (id) => {
 onMounted(() => {
     loadMyClubs()
 })
+
+const handleDeleteClub = (clubId) => {
+    ElMessageBox.confirm(
+        '确定要解散该社团吗？所有成员将被移出，此操作不可恢复！',
+        '高危操作确认',
+        {
+            confirmButtonText: '确定解散',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    ).then(async () => {
+        try {
+            // 调用后端的删除接口
+            const res = await request.delete(`/club/delete/${clubId}`);
+            if (res.code === 200) { // 根据你 Result 类的成功状态码调整
+                ElMessage.success('社团已成功解散');
+                // TODO: 重新调用获取列表的接口刷新页面数据
+                loadMyClubs(); 
+            } else {
+                ElMessage.error(res.msg || '删除失败');
+            }
+        } catch (error) {
+            console.error('请求出错:', error);
+        }
+    }).catch(() => {
+        ElMessage.info('已取消删除');
+    });
+}
+
 </script>
 
 <style scoped>

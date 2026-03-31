@@ -1,7 +1,7 @@
 package com.sil.club.service;
 
-import com.sil.club.entity.Club;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sil.club.entity.Club;
 
 /**
  * <p>
@@ -13,4 +13,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IClubService extends IService<Club> {
 
+    // 自定义删除社团及其关联数据的方法
+    boolean deleteClubWithMembers(Long clubId);
 }

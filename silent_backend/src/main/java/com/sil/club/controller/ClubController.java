@@ -5,12 +5,13 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping; // 确认这个路径和你项目一致
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController; // 确认这个路径和你项目一致
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sil.club.entity.Club;
@@ -97,5 +98,16 @@ public class ClubController {
             return Result.success("已成功驳回该申请");
         }
         return Result.error("未找到该社团记录");
+    }
+
+    // 删除社团接口
+    @DeleteMapping("/delete/{id}")
+    public Result deleteClub(@PathVariable("id") Long id) {
+        boolean success = clubService.deleteClubWithMembers(id);
+        if (success) {
+            return Result.success("社团解散成功");
+        } else {
+            return Result.error("删除失败，社团可能不存在");
+        }
     }
 }
