@@ -41,17 +41,15 @@ public class ClubMemberController {
      */
     @PostMapping("/apply")
     public Result<String> apply(@RequestBody ClubMember clubMember) {
-        // 调用我们刚才在 Service 写的 applyToJoin 逻辑
         boolean success = clubMemberService.applyToJoin(clubMember.getUserId(), clubMember.getClubId());
 
         if (success) {
-            // 【联动】给社长发个通知
             Club club = clubService.getById(clubMember.getClubId());
             if (club != null && club.getLeaderId() != null) {
                 Notification note = new Notification();
-                note.setUserId(club.getLeaderId()); // 接收人是社长
+                note.setUserId(club.getLeaderId());
                 note.setContent("有人申请加入您的社团【" + club.getName() + "】，请尽快审批！");
-                note.setType(1); // 系统消息
+                note.setType(1);
                 notificationService.save(note);
             }
             return Result.success("申请成功，请耐心等待社长审核");
@@ -62,11 +60,8 @@ public class ClubMemberController {
 
     @PostMapping("/audit")
     public Result<String> audit(@RequestBody Map<String, Object> params) {
-        // 🚩 修复 1：将 "status" 改为与前端一致的 "joinStatus"
         Object memberIdObj = params.get("memberId");
         Object statusObj = params.get("joinStatus");
-
-        // 🚩 修复 2：增加空值检查，防止 NullPointerException
         if (memberIdObj == null || statusObj == null) {
             return Result.error("审批失败：memberId 或 joinStatus 缺失");
         }
@@ -79,14 +74,11 @@ public class ClubMemberController {
             return Result.error("申请记录不存在");
         }
 
-        // 更新状态
         member.setJoinStatus(status);
         clubMemberService.updateById(member);
 
-        // 【联动】给申请人发个结果通知
         Notification note = new Notification();
         note.setUserId(member.getUserId());
-        // 🚩 修复 3：使用更加安全的比较方式
         String resultText = (status.equals(1)) ? "恭喜！您的入社申请已通过！" : "很抱歉，您的入社申请被拒绝了。";
         note.setContent(resultText);
         notificationService.save(note);
@@ -96,7 +88,6 @@ public class ClubMemberController {
 
     @GetMapping("/list/pending")
     public Result<List<ClubMember>> getPendingList() {
-        // 🚩 查询所有 join_status = 0 (申请中) 的记录
         List<ClubMember> list = clubMemberService.list(
                 new LambdaQueryWrapper<ClubMember>().eq(ClubMember::getJoinStatus, 0)
         );

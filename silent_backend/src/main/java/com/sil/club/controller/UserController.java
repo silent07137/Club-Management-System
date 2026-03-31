@@ -47,14 +47,12 @@ public class UserController {
     public Result<List<User>> list(@RequestParam(required = false) String name) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         
-        // 如果前端传了姓名，就按姓名模糊搜索
         if (name != null && !name.trim().isEmpty()) {
             wrapper.like(User::getName, name);
         }
         
         List<User> list = userService.list(wrapper);
         
-        // 🛡️ 安全起见：传给前端之前，把密码字段清空，防止密码泄露
         for (User user : list) {
             user.setPassword(null);
         }

@@ -27,14 +27,11 @@ public class ClubServiceImpl extends ServiceImpl<ClubMapper, Club> implements IC
     private ClubMemberMapper clubMemberMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class) // 开启事务保证数据一致性
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteClubWithMembers(Long clubId) {
-        // 1. 删除社团成员关联记录
         QueryWrapper<ClubMember> wrapper = new QueryWrapper<>();
         wrapper.eq("club_id", clubId);
         clubMemberMapper.delete(wrapper);
-
-        // 2. 删除社团本身
         return this.removeById(clubId);
     }
 }

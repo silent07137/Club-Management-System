@@ -20,7 +20,7 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
         ClubMember member = this.getOne(new LambdaQueryWrapper<ClubMember>()
                 .eq(ClubMember::getUserId, userId)
                 .eq(ClubMember::getClubId, clubId)
-                .eq(ClubMember::getJoinStatus, 1)); // 必须是已加入状态
+                .eq(ClubMember::getJoinStatus, 1));
 
         return member != null && (member.getRoleType() == 1 || member.getRoleType() == 2);
     }
@@ -60,68 +60,52 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
     public boolean applyToJoin(Long userId, Long clubId) {
         System.out.println("收到申请：用户ID=" + userId + ", 社团ID=" + clubId);
         if (userId == null) {
-            return false; // 或者抛出异常
+            return false;
         }
         if (userId == null || clubId == null) {
             throw new RuntimeException("申请失败：用户信息丢失，请重新登录");
         }
-        // 1. 检查是否重复申请
         Long count = this.count(new LambdaQueryWrapper<ClubMember>()
                 .eq(ClubMember::getUserId, userId)
                 .eq(ClubMember::getClubId, clubId));
 
         if (count > 0) {
-            return false; // 已经有记录了，不能再投
+            return false;
         }
-        // 2. 插入新记录，初始状态为 0 (申请中)
         ClubMember newMember = new ClubMember();
         newMember.setUserId(userId);
         newMember.setClubId(clubId);
-        newMember.setRoleType(3);    // 默认进场都是普通成员
-        newMember.setJoinStatus(0);  // 等待审批
-
+        newMember.setRoleType(3);
+        newMember.setJoinStatus(0);
         return this.save(newMember);
     }
 
     @Override
     public boolean quitClub(Long clubId, Long userId) {
-        // 1. 先查出当前用户在这个社团的成员信息
         QueryWrapper<ClubMember> wrapper = new QueryWrapper<>();
         wrapper.eq("club_id", clubId).eq("user_id", userId);
         ClubMember member = this.getOne(wrapper);
 
         if (member == null) {
-            return false; // 根本不在社团里
+            return false;
         }
 
-        // 2. 核心校验：如果是社长（假设 roleType == 1 代表社长），禁止退出
         if (member.getRoleType() != null && member.getRoleType() == 1) {
             throw new RuntimeException("社长不能退出社团，请直接解散社团");
-            // 如果你的项目有统一的业务异常类 (如 BusinessException)，建议抛出你们自定义的异常
         }
-
-        // 3. 普通成员，正常删除记录
         return this.remove(wrapper);
     }
+
     @Override
     public boolean auditMember(Long memberId, Integer status) {
-        // 1. 获取这条成员关联记录
         ClubMember member = this.getById(memberId);
-        
-        // 2. 校验：记录是否存在，且必须是“申请中(0)”的状态
         if (member == null || member.getJoinStatus() != 0) {
-            return false; 
+            return false;
         }
-
-        // 3. 修改状态
         member.setJoinStatus(status);
-        
-        // 4. 如果是“通过(1)”，顺便给他分配一个“普通成员(3)”的角色
         if (status == 1) {
             member.setRoleType(3);
         }
-
-        // 5. 保存更新
         return this.updateById(member);
     }
 }

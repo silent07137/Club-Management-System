@@ -8,11 +8,10 @@ import lombok.Data;
 @Data
 public class Result<T> {
     
-    private Integer code; // 状态码
-    private String message; // 提示信息
-    private T data; // 返回的数据
+    private Integer code;
+    private String message;
+    private T data;
 
-    // 私有化构造方法，强制使用提供的静态方法
     private Result() {}
 
     private Result(Integer code, String message, T data) {

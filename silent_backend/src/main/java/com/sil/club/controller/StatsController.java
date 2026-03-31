@@ -16,7 +16,6 @@ import com.sil.club.vo.Result;
 @RequestMapping("/stats")
 public class StatsController {
 
-    // 把用户和活动的管家都请过来
     @Autowired
     private IUserService userService;
 
@@ -31,7 +30,6 @@ public class StatsController {
     public Result<Map<String, Object>> getInfo() {
         Map<String, Object> data = new HashMap<>();
         
-        // 调用 MyBatis-Plus 自带的 count() 方法，直接统计数据库里有几条数据
         data.put("userCount", userService.count());
         data.put("activityCount", activityService.count());
         
