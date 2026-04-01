@@ -64,4 +64,13 @@ public class ActivityController {
             return Result.error(500, "修改失败，请稍后重试");
         }
     }
+
+    @GetMapping("/club")
+    public Result<List<Activity>> getClubActivities(@RequestParam Long clubId) {
+        LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
+        // 按社团ID查询，并且按开始时间倒序排列（最新的在前面）
+        wrapper.eq(Activity::getClubId, clubId).orderByDesc(Activity::getStartTime);
+        List<Activity> list = activityService.list(wrapper);
+        return Result.success(list);
+    }
 }

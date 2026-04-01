@@ -9,7 +9,6 @@
                     <el-button v-if="isPresident" type="danger" @click="handleDisbandClub">
                         解散社团
                     </el-button>
-
                     <el-button v-else type="warning" plain @click="handleQuitClub">
                         退出社团
                     </el-button>
@@ -68,6 +67,29 @@
                             </el-timeline-item>
                         </el-timeline>
                     </el-tab-pane>
+                    <el-tab-pane label="🎉 社团活动" name="activities">
+                        <div style="margin-bottom: 20px;" v-if="isPresident">
+                            <el-button type="primary" @click="showAddActivityDialog = true">
+                                + 发布新活动
+                            </el-button>
+                        </div>
+
+                        <el-timeline v-if="activityList.length > 0">
+                            <el-timeline-item v-for="activity in activityList" :key="activity.activityId"
+                                :timestamp="activity.startTime ? activity.startTime.replace('T', ' ') : ''"
+                                placement="top" type="primary">
+                                <el-card>
+                                    <h3 style="margin-top: 0">{{ activity.title }}</h3>
+                                    <p><strong>📍 地点：</strong>{{ activity.location }}</p>
+                                    <p><strong>📝 详情：</strong>{{ activity.description }}</p>
+                                    <p style="color: #909399; font-size: 13px;">
+                                        结束时间：{{ activity.endTime ? activity.endTime.replace('T', ' ') : '' }}
+                                    </p>
+                                </el-card>
+                            </el-timeline-item>
+                        </el-timeline>
+                        <el-empty v-else description="暂无活动记录" />
+                    </el-tab-pane>
                     <el-tab-pane label="🖼️ 社团相册">
                         <el-empty description="暂无照片" />
                     </el-tab-pane>
@@ -119,6 +141,33 @@
             </el-col>
         </el-row>
     </div>
+    <el-dialog v-model="showAddActivityDialog" title="发布新活动" width="500px">
+        <el-form :model="activityForm" label-width="80px">
+            <el-form-item label="活动标题">
+                <el-input v-model="activityForm.title" placeholder="请输入活动标题" />
+            </el-form-item>
+            <el-form-item label="活动地点">
+                <el-input v-model="activityForm.location" placeholder="请输入活动地点" />
+            </el-form-item>
+            <el-form-item label="活动时间">
+                <el-date-picker v-model="activityForm.timeRange" type="datetimerange" range-separator="至"
+                    start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" />
+            </el-form-item>
+            <el-form-item label="活动详情">
+                <el-input type="textarea" :rows="4" v-model="activityForm.description" placeholder="请输入活动详情..." />
+            </el-form-item>
+            <el-form-item label="活动奖励">
+                <el-input-number v-model="activityForm.pointsReward" :min="0" :max="100" label="积分奖励" />
+                <span style="margin-left: 10px; color: gray;">积分 (可选)</span>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="showAddActivityDialog = false">取消</el-button>
+                <el-button type="primary" @click="submitActivity">发布</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 
 <script setup>
@@ -165,6 +214,7 @@ onMounted(async () => {
     await loadClubDetail()
     loadPendingList()
     loadMemberList()
+    fetchActivities()
 })
 
 const handleQuitClub = () => {
@@ -187,7 +237,7 @@ const handleDisbandClub = () => {
     ElMessageBox.confirm('确定要解散该社团吗？所有成员将被移出，此操作不可恢复！', '高危操作确认', {
         confirmButtonText: '确定解散',
         cancelButtonText: '取消',
-        type: 'error', 
+        type: 'error',
     }).then(async () => {
         const res = await request.delete(`/club/delete/${route.params.id}`)
         if (res.code === 200) {
@@ -217,14 +267,13 @@ const loadPendingList = async () => {
     }
 }
 
-// 处理通过/拒绝
 const handleAudit = (memberId, status) => {
     const actionText = status === 1 ? '通过' : '拒绝'
     ElMessageBox.confirm(`确定要 ${actionText} 该用户的申请吗？`, '审批确认', {
         type: status === 1 ? 'success' : 'warning'
     }).then(async () => {
         const res = await request.post('/club/audit', {
-            id: memberId, 
+            id: memberId,
             status: status
         })
 
@@ -264,6 +313,60 @@ const handleKick = (memberId) => {
             ElMessage.error(res.msg || '操作失败')
         }
     }).catch(() => { })
+}
+
+const activityList = ref([])
+const showAddActivityDialog = ref(false)
+const activityForm = ref({
+    title: '',
+    location: '',
+    description: '',
+    timeRange: [],
+    pointsReward: 0
+})
+
+const fetchActivities = () => {
+    const currentClubId = Number(route.query.id) || Number(route.query.clubId) || Number(route.params.id);
+    if (!currentClubId) return;
+    request.get(`/activity/club?clubId=${currentClubId}`).then(res => {
+        if (res.code === 200) {
+            activityList.value = res.data;
+        } else {
+            ElMessage.error(res.msg || '获取活动列表失败');
+        }
+    })
+}
+
+const submitActivity = () => {
+    if (!activityForm.value.title || !activityForm.value.timeRange || activityForm.value.timeRange.length === 0) {
+        ElMessage.warning('请填写完整的标题和时间')
+        return
+    }
+    const currentClubId = Number(route.query.id) || Number(route.query.clubId) || Number(route.params.id);
+    if (!currentClubId) {
+        ElMessage.error('无法获取当前社团ID，请刷新页面重试');
+        return;
+    }
+    const payload = {
+        clubId: currentClubId,
+        title: activityForm.value.title,
+        location: activityForm.value.location,
+        description: activityForm.value.description,
+        startTime: activityForm.value.timeRange[0],
+        endTime: activityForm.value.timeRange[1],
+        pointsReward: activityForm.value.pointsReward || 0,
+        status: 0
+    }
+    request.post('/activity/add', payload).then(res => {
+        if (res.code === 200) {
+            ElMessage.success('活动发布成功！')
+            showAddActivityDialog.value = false
+            activityForm.value = { title: '', location: '', description: '', timeRange: [], pointsReward: 0 }
+            fetchActivities()
+        } else {
+            ElMessage.error(res.msg || '发布失败')
+        }
+    })
 }
 </script>
 
