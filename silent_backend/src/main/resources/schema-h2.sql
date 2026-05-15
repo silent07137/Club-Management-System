@@ -1,0 +1,73 @@
+CREATE TABLE IF NOT EXISTS user (
+  user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  student_id VARCHAR(20) NOT NULL,
+  name VARCHAR(50) NOT NULL,
+  password VARCHAR(100) NOT NULL,
+  avatar VARCHAR(255),
+  role VARCHAR(20) DEFAULT 'student',
+  global_role TINYINT DEFAULT 1,
+  points INT DEFAULT 0,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_student_id UNIQUE (student_id)
+);
+
+CREATE TABLE IF NOT EXISTS club (
+  club_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description CLOB,
+  leader_id BIGINT NOT NULL,
+  status TINYINT DEFAULT 0,
+  reject_reason CLOB,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS club_member (
+  member_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  club_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  role_type TINYINT DEFAULT 3 NOT NULL,
+  join_status TINYINT DEFAULT 1,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_club_user UNIQUE (club_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS activity (
+  activity_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  club_id BIGINT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  description CLOB,
+  location VARCHAR(100) NOT NULL,
+  start_time TIMESTAMP NOT NULL,
+  end_time TIMESTAMP NOT NULL,
+  max_participants INT DEFAULT 0,
+  status TINYINT DEFAULT 0,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS notification (
+  notify_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  content CLOB NOT NULL,
+  type TINYINT DEFAULT 1,
+  is_read TINYINT DEFAULT 0,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS point_record (
+  record_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  points_change INT NOT NULL,
+  reason VARCHAR(100) NOT NULL,
+  related_id BIGINT,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS registration (
+  reg_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  activity_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  status TINYINT DEFAULT 1,
+  sign_time TIMESTAMP,
+  reg_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_act_user UNIQUE (activity_id, user_id)
+);

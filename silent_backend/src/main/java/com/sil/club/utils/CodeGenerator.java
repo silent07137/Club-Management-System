@@ -15,9 +15,10 @@ public class CodeGenerator {
 
         String projectPath = System.getProperty("user.dir");
 
-        String url = "jdbc:mysql://localhost:3306/club_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false";
-        String username = "root";
-        String password = "071370";
+        String url = System.getProperty("club.codegen.url",
+                "jdbc:mysql://localhost:3306/club_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false");
+        String username = System.getProperty("club.codegen.username", "root");
+        String password = System.getProperty("club.codegen.password", "");
 
         FastAutoGenerator.create(url, username, password)
                 .globalConfig(builder -> {

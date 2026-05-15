@@ -20,6 +20,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Result<String> handleException(Exception e) {
         log.error("系统发生未知异常: ", e);
+        if (e.getMessage() != null && !e.getMessage().isBlank()) {
+            return Result.error(500, e.getMessage());
+        }
         return Result.error(500, "系统开小差了，请稍后再试！");
     }
 }

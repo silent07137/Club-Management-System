@@ -1,16 +1,25 @@
 package com.sil.club.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sil.club.entity.Club;
 import com.sil.club.entity.ClubMember;
 import com.sil.club.mapper.ClubMemberMapper;
+import com.sil.club.service.IClubService;
 import com.sil.club.service.IClubMemberService;
 
 @Service
 public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMember> implements IClubMemberService {
+
+    private final IClubService clubService;
+
+    public ClubMemberServiceImpl(IClubService clubService) {
+        this.clubService = clubService;
+    }
 
     /**
      * 判断用户是否拥有该社团的管理权限 逻辑：role_type 为 1(社长) 或 2(干事)
@@ -22,7 +31,9 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
                 .eq(ClubMember::getClubId, clubId)
                 .eq(ClubMember::getJoinStatus, 1));
 
-        return member != null && (member.getRoleType() == 1 || member.getRoleType() == 2);
+        return member != null
+                && (Integer.valueOf(1).equals(member.getRoleType())
+                        || Integer.valueOf(2).equals(member.getRoleType()));
     }
 
     /**
@@ -39,6 +50,9 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
         }
         if (member.getJoinStatus() == 0) {
             return "申请中";
+        }
+        if (member.getRoleType() == null) {
+            return "未知";
         }
 
         return switch (member.getRoleType()) {
@@ -58,10 +72,6 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
      */
     @Override
     public boolean applyToJoin(Long userId, Long clubId) {
-        System.out.println("收到申请：用户ID=" + userId + ", 社团ID=" + clubId);
-        if (userId == null) {
-            return false;
-        }
         if (userId == null || clubId == null) {
             throw new RuntimeException("申请失败：用户信息丢失，请重新登录");
         }
@@ -90,7 +100,7 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
             return false;
         }
 
-        if (member.getRoleType() != null && member.getRoleType() == 1) {
+        if (Integer.valueOf(1).equals(member.getRoleType())) {
             throw new RuntimeException("社长不能退出社团，请直接解散社团");
         }
         return this.remove(wrapper);
@@ -98,6 +108,9 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
 
     @Override
     public boolean auditMember(Long memberId, Integer status) {
+        if (status == null || (status != 1 && status != 2)) {
+            return false;
+        }
         ClubMember member = this.getById(memberId);
         if (member == null || member.getJoinStatus() != 0) {
             return false;
@@ -107,5 +120,28 @@ public class ClubMemberServiceImpl extends ServiceImpl<ClubMemberMapper, ClubMem
             member.setRoleType(3);
         }
         return this.updateById(member);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeFromAllClubs(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+
+        Long leaderCount = clubService.count(new LambdaQueryWrapper<Club>()
+                .eq(Club::getLeaderId, userId));
+        if (leaderCount != null && leaderCount > 0) {
+            throw new RuntimeException("该用户是社长，请先解散社团或转让社长职位");
+        }
+
+        Long membershipCount = this.count(new LambdaQueryWrapper<ClubMember>()
+                .eq(ClubMember::getUserId, userId));
+        if (membershipCount == null || membershipCount == 0) {
+            return false;
+        }
+
+        return this.remove(new LambdaQueryWrapper<ClubMember>()
+                .eq(ClubMember::getUserId, userId));
     }
 }

@@ -23,14 +23,22 @@
         <el-table-column prop="name" label="真实姓名" />
         <el-table-column label="角色身份" width="120">
           <template #default="scope">
-            <el-tag :type="scope.row.studentId === 'admin' ? 'danger' : 'success'">
-              {{ scope.row.studentId === 'admin' ? '管理员' : '普通成员' }}
+            <el-tag :type="scope.row.globalRole === 0 ? 'danger' : 'success'">
+              {{ scope.row.globalRole === 0 ? '管理员' : '普通成员' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="scope">
-            <el-button size="small" link type="danger" @click="handleDelete(scope.row.userId)">踢出社团</el-button>
+            <el-button
+              size="small"
+              link
+              type="danger"
+              :disabled="scope.row.globalRole === 0"
+              @click="handleRemoveFromClubs(scope.row.userId)"
+            >
+              移出社团
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -61,32 +69,31 @@ const loadData = async () => {
 }
 
 
-const handleDelete = (id) => {
-  console.log("👉 点击了踢出按钮，传进来的 ID 是：", id)
+const handleRemoveFromClubs = (id) => {
   if (!id) {
     ElMessage.error('糟糕！拿不到这个人的 ID，请检查绑定的字段名是不是写错了！')
     return
   }
 
-  ElMessageBox.confirm('确定要将该成员踢出社团吗？此操作不可恢复！', '高危操作', {
-    confirmButtonText: '狠心踢出',
+  ElMessageBox.confirm('确定要将该用户移出所有社团吗？此操作不会删除账号！', '高危操作', {
+    confirmButtonText: '确认移出',
     cancelButtonText: '手滑了',
     type: 'warning',
   }).then(async () => {
     try {
-      const res = await request.delete(`/user/delete/${id}`)
+      const res = await request.delete(`/user/remove-from-clubs/${id}`)
       if (res.code === 200) {
-        ElMessage.success('已成功踢出该成员！')
+        ElMessage.success('已成功移出该用户的所有社团！')
         loadData()
       } else {
         ElMessage.error(res.message)
       }
     } catch (error) {
       console.error(error)
-      ElMessage.error('系统开小差了')
+      ElMessage.error('移出失败，请稍后重试')
     }
   }).catch(() => {
-    ElMessage.info('已取消踢出')
+    ElMessage.info('已取消移出')
   })
 }
 

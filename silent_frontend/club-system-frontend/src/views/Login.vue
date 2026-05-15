@@ -21,13 +21,13 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="handleSubmit" style="width: 100%;">
+          <el-button type="primary" :loading="submitting" @click="handleSubmit" style="width: 100%;">
             {{ isLogin ? '立 即 登 录' : '注 册 并 登 录' }}
           </el-button>
         </el-form-item>
         
         <div class="toggle-text">
-          <el-link type="primary" @click="isLogin = !isLogin">
+          <el-link type="primary" @click="toggleMode">
             {{ isLogin ? '没有账号？点击去注册' : '已有账号？点击去登录' }}
           </el-link>
         </div>
@@ -44,6 +44,7 @@ import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const isLogin = ref(true)
+const submitting = ref(false)
 
 const form = reactive({
   studentId: '',
@@ -51,24 +52,43 @@ const form = reactive({
   name: ''
 })
 
+const toggleMode = () => {
+  isLogin.value = !isLogin.value
+  form.password = ''
+  form.name = ''
+}
+
 const handleSubmit = async () => {
   if (!form.studentId || !form.password) {
     ElMessage.warning('学号和密码不能为空哦！')
     return
   }
 
+  if (!isLogin.value && !form.name.trim()) {
+    ElMessage.warning('请先填写真实姓名')
+    return
+  }
+
+  submitting.value = true
   try {
-    const url = isLogin.value ? '/user/login' : '/user/register'
-    const res = await request.post(url, form)
-    
-    if (res.code === 200) {
-      localStorage.setItem("token", res.data.token)
-      localStorage.setItem("user", JSON.stringify(res.data))
-      ElMessage.success("欢迎回来")
-      router.push('/home') 
+    if (!isLogin.value) {
+      await request.post('/user/register', form)
+    }
+
+    const loginRes = await request.post('/user/login', {
+      studentId: form.studentId,
+      password: form.password
+    })
+
+    if (loginRes.code === 200) {
+      localStorage.setItem('user', JSON.stringify(loginRes.data))
+      ElMessage.success(isLogin.value ? '欢迎回来' : '注册成功，已自动登录')
+      router.replace('/home')
     }
   } catch (error) {
-    console.log("请求失败", error)
+    ElMessage.error(typeof error === 'string' ? error : '请求失败，请稍后重试')
+  } finally {
+    submitting.value = false
   }
 }
 </script>

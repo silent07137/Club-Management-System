@@ -3,9 +3,9 @@ package com.sil.club.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sil.club.dto.UserDTO;
 import com.sil.club.entity.User;
+import com.sil.club.service.IClubMemberService;
 import com.sil.club.service.IUserService;
 import com.sil.club.vo.Result;
 
@@ -24,6 +25,9 @@ public class UserController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private IClubMemberService clubMemberService;
 
     /**
      * 注册接口
@@ -40,6 +44,7 @@ public class UserController {
     @PostMapping("/login")
     public Result<User> login(@RequestBody UserDTO userDTO) {
         User user = userService.login(userDTO);
+        user.setPassword(null);
         return Result.success("登录成功", user);
     }
 
@@ -60,17 +65,17 @@ public class UserController {
         return Result.success(list);
     }
     /**
-     * 根据 ID 删除用户（踢出社团）
-     * 前端访问路径：DELETE http://localhost:8080/user/delete/1
+     * 根据 ID 移出用户的所有社团关系
+     * 前端访问路径：DELETE http://localhost:8080/user/remove-from-clubs/1
+     * 兼容旧路径 /user/delete/{id}
      */
-    @DeleteMapping("/delete/{id}")
-    public Result<String> delete(@PathVariable Long id) {
-        // 调用 MyBatis-Plus 的 removeById 删除数据库里的记录
-        boolean success = userService.removeById(id);
+    @DeleteMapping({"/delete/{id}", "/remove-from-clubs/{id}"})
+    public Result<String> removeFromClubs(@PathVariable Long id) {
+        boolean success = clubMemberService.removeFromAllClubs(id);
         if (success) {
-            return Result.success("成员已成功踢出！");
+            return Result.success("已将该用户移出所有社团");
         } else {
-            return Result.error(500, "删除失败，该成员可能不存在");
+            return Result.error(500, "移出失败，该用户可能没有加入任何社团");
         }
     }
 }

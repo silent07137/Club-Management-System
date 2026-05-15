@@ -1,5 +1,7 @@
 package com.sil.club.service.impl;
 
+import java.util.Objects;
+
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -16,8 +18,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public User login(UserDTO userDTO) {
         User dbUser = this.getOne(new LambdaQueryWrapper<User>()
                 .eq(User::getStudentId, userDTO.getStudentId()));
-        if (dbUser == null || !dbUser.getPassword().equals(userDTO.getPassword())) {
-            throw new RuntimeException("学号或密码错误！");
+        if (dbUser == null) {
+            throw new RuntimeException("该学号尚未注册！");
+        }
+        if (!Objects.equals(dbUser.getPassword(), userDTO.getPassword())) {
+            throw new RuntimeException("密码错误！");
         }
         return dbUser;
     }

@@ -36,6 +36,9 @@ public class ClubMemberController {
     @Autowired
     private INotificationService notificationService;
 
+    @Autowired
+    private com.sil.club.mapper.ClubMemberMapper clubMemberMapper;
+
     /**
      * 1. 提交入社申请 前端传参：{ "userId": 1, "clubId": 10 }
      */
@@ -68,14 +71,19 @@ public class ClubMemberController {
 
         Long memberId = Long.valueOf(memberIdObj.toString());
         Integer status = Integer.valueOf(statusObj.toString());
+        if (status != 1 && status != 2) {
+            return Result.error("审批失败：joinStatus 只能是 1 或 2");
+        }
 
         ClubMember member = clubMemberService.getById(memberId);
         if (member == null) {
             return Result.error("申请记录不存在");
         }
 
-        member.setJoinStatus(status);
-        clubMemberService.updateById(member);
+        boolean success = clubMemberService.auditMember(memberId, status);
+        if (!success) {
+            return Result.error("审批失败，该申请可能已处理");
+        }
 
         Notification note = new Notification();
         note.setUserId(member.getUserId());
@@ -87,10 +95,8 @@ public class ClubMemberController {
     }
 
     @GetMapping("/list/pending")
-    public Result<List<ClubMember>> getPendingList() {
-        List<ClubMember> list = clubMemberService.list(
-                new LambdaQueryWrapper<ClubMember>().eq(ClubMember::getJoinStatus, 0)
-        );
+    public Result<List<Map<String, Object>>> getPendingList() {
+        List<Map<String, Object>> list = clubMemberMapper.selectPendingMembersWithClubInfo(0);
         return Result.success(list);
     }
 

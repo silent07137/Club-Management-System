@@ -71,12 +71,12 @@ const handleDeleteClub = (clubId) => {
         try {
             // 调用后端的删除接口
             const res = await request.delete(`/club/delete/${clubId}`);
-            if (res.code === 200) { // 根据你 Result 类的成功状态码调整
+            if (res.code === 200) {
                 ElMessage.success('社团已成功解散');
                 // TODO: 重新调用获取列表的接口刷新页面数据
                 loadMyClubs(); 
             } else {
-                ElMessage.error(res.msg || '删除失败');
+                ElMessage.error(res.message || '删除失败');
             }
         } catch (error) {
             console.error('请求出错:', error);

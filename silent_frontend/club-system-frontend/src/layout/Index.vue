@@ -46,11 +46,11 @@
         <span>智慧校园 / 首页</span>
         <el-dropdown>
           <span class="el-dropdown-link" style="cursor: pointer;">
-            管理员 <el-icon><arrow-down /></el-icon>
+            {{ displayName }} <el-icon><arrow-down /></el-icon>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>个人中心</el-dropdown-item>
+              <el-dropdown-item disabled>{{ roleLabel }}</el-dropdown-item>
               <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -66,13 +66,23 @@
 <script setup>
 import { Menu, Checked, Bell, HomeFilled, User, Calendar, ArrowDown } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
-const user = JSON.parse(localStorage.getItem('user') || '{}')
+import { computed, ref } from 'vue'
+const userState = ref(JSON.parse(localStorage.getItem('user') || '{}'))
 
 // 权限判定逻辑
-const isAdmin = user.role === 'ROLE_ADMIN'
-const isLeader = user.isLeader === true
+const isAdmin = computed(() => userState.value.role === 'ROLE_ADMIN')
+const isLeader = computed(() => userState.value.role === 'leader')
+const displayName = computed(() => userState.value.name || '用户')
+const roleLabel = computed(() => {
+  if (userState.value.role === 'ROLE_ADMIN') return '当前身份：管理员'
+  if (userState.value.role === 'leader') return '当前身份：社长'
+  return '当前身份：普通成员'
+})
 const router = useRouter()
 const handleLogout = () => {
+  localStorage.removeItem('user')
+  localStorage.removeItem('token')
+  userState.value = {}
   router.push('/login')
 }
 </script>

@@ -50,6 +50,7 @@ public class ClubController {
     @PostMapping("/apply")
     public Result apply(@RequestBody Club club) {
         club.setStatus(0); // 设置为审核中
+        club.setRejectReason(null);
         clubService.save(club);
         return Result.success();
     }
@@ -59,9 +60,16 @@ public class ClubController {
     public Result approveClub(@RequestBody Map<String, Long> params) {
         Long clubId = params.get("clubId");
         Long userId = params.get("userId");
+        if (clubId == null || userId == null) {
+            return Result.error("参数缺失");
+        }
 
         Club club = clubService.getById(clubId);
+        if (club == null) {
+            return Result.error("社团不存在");
+        }
         club.setStatus(1); // 已开办
+        club.setRejectReason(null);
         clubService.updateById(club);
 
         ClubMember member = new ClubMember();
@@ -79,14 +87,22 @@ public class ClubController {
         return Result.success(clubService.list(new LambdaQueryWrapper<Club>().eq(Club::getStatus, 0)));
     }
 
+    @GetMapping("/list/rejected")
+    public Result getRejectedClubs() {
+        return Result.success(clubService.list(new LambdaQueryWrapper<Club>().eq(Club::getStatus, 2)));
+    }
+
     @PostMapping("/reject")
     public Result rejectClub(@RequestBody Map<String, Object> params) {
         Long clubId = Long.parseLong(params.get("clubId").toString());
-        String reason = (String) params.get("reason");
+        String reason = params.get("reason") == null ? null : params.get("reason").toString().trim();
+        if (reason == null || reason.isEmpty()) {
+            return Result.error("请填写驳回理由");
+        }
         Club club = clubService.getById(clubId);
         if (club != null) {
             club.setStatus(2);
-            //club.setRejectReason(reason);
+            club.setRejectReason(reason);
             clubService.updateById(club);
             return Result.success("已成功驳回该申请");
         }
@@ -113,6 +129,9 @@ public class ClubController {
     // 审批加入请求
     @PostMapping("/audit")
     public Result auditMember(@RequestBody Map<String, Integer> params) {
+        if (params.get("id") == null || params.get("status") == null) {
+            return Result.error(500, "参数缺失");
+        }
         Long memberId = Long.valueOf(params.get("id"));
         Integer status = params.get("status"); // 1-通过，2-拒绝
         boolean success = clubMemberService.auditMember(memberId, status);

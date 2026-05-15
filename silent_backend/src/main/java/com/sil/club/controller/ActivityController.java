@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sil.club.entity.Activity;
 import com.sil.club.service.IActivityService;
-import com.sil.club.utils.Result;
+import com.sil.club.vo.Result;
 
 @RestController
 @RequestMapping("/activity")

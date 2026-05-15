@@ -20,6 +20,8 @@ public class Club {
     private String description; // 对应数据库 description
     private Long leaderId;      // 对应数据库 leader_id (社长ID)
     private Integer status;     // 对应数据库 status (1-正常, 0-关闭)
+    @TableField("reject_reason")
+    private String rejectReason;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

@@ -5,20 +5,36 @@
                 <div style="font-weight: bold; font-size: 18px;">⚖️ 新社团开办审批</div>
             </template>
 
-            <el-table :data="pendingClubs" border stripe v-loading="loading" style="width: 100%">
-                <el-table-column prop="clubId" label="申请编号" width="100" />
-                <el-table-column prop="name" label="拟办社团名称" width="180" />
-                <el-table-column prop="description" label="社团简介" show-overflow-tooltip />
-                <el-table-column prop="leaderId" label="申请人ID" width="100" />
-                <el-table-column label="操作" width="150" fixed="right">
-                    <template #default="scope">
-                        <el-button type="success" size="small" @click="handleApprove(scope.row)">通过</el-button>
-                        <el-button type="danger" size="small" @click="handleReject(scope.row)">拒绝</el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
+            <el-tabs v-model="activeTab">
+                <el-tab-pane label="待审核" name="pending">
+                    <el-table :data="pendingClubs" border stripe v-loading="loadingPending" style="width: 100%">
+                        <el-table-column prop="clubId" label="申请编号" width="100" />
+                        <el-table-column prop="name" label="拟办社团名称" width="180" />
+                        <el-table-column prop="description" label="社团简介" show-overflow-tooltip />
+                        <el-table-column prop="leaderId" label="申请人ID" width="100" />
+                        <el-table-column label="操作" width="150" fixed="right">
+                            <template #default="scope">
+                                <el-button type="success" size="small" @click="handleApprove(scope.row)">通过</el-button>
+                                <el-button type="danger" size="small" @click="handleReject(scope.row)">拒绝</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
 
-            <el-empty v-if="pendingClubs.length === 0 && !loading" description="暂无待处理的开办申请" />
+                    <el-empty v-if="pendingClubs.length === 0 && !loadingPending" description="暂无待处理的开办申请" />
+                </el-tab-pane>
+
+                <el-tab-pane label="已驳回" name="rejected">
+                    <el-table :data="rejectedClubs" border stripe v-loading="loadingRejected" style="width: 100%">
+                        <el-table-column prop="clubId" label="申请编号" width="100" />
+                        <el-table-column prop="name" label="社团名称" width="180" />
+                        <el-table-column prop="leaderId" label="申请人ID" width="100" />
+                        <el-table-column prop="rejectReason" label="驳回理由" show-overflow-tooltip />
+                        <el-table-column prop="createTime" label="申请时间" width="180" />
+                    </el-table>
+
+                    <el-empty v-if="rejectedClubs.length === 0 && !loadingRejected" description="暂无已驳回的申请" />
+                </el-tab-pane>
+            </el-tabs>
         </el-card>
     </div>
 </template>
@@ -28,21 +44,42 @@ import { ref, onMounted } from 'vue'
 import request from '../utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
+const activeTab = ref('pending')
 const pendingClubs = ref([])
-const loading = ref(false)
+const rejectedClubs = ref([])
+const loadingPending = ref(false)
+const loadingRejected = ref(false)
 
 const loadPending = async () => {
-    loading.value = true
+    loadingPending.value = true
     try {
         const res = await request.get('/club/list/pending')
         if (res.code === 200) {
             pendingClubs.value = res.data
         }
     } catch (error) {
-        console.error('获取列表失败:', error)
+        console.error('获取待审核列表失败:', error)
     } finally {
-        loading.value = false
+        loadingPending.value = false
     }
+}
+
+const loadRejected = async () => {
+    loadingRejected.value = true
+    try {
+        const res = await request.get('/club/list/rejected')
+        if (res.code === 200) {
+            rejectedClubs.value = res.data
+        }
+    } catch (error) {
+        console.error('获取已驳回列表失败:', error)
+    } finally {
+        loadingRejected.value = false
+    }
+}
+
+const refreshLists = async () => {
+    await Promise.all([loadPending(), loadRejected()])
 }
 
 const handleApprove = (row) => {
@@ -57,32 +94,33 @@ const handleApprove = (row) => {
         })
         if (res.code === 200) {
             ElMessage.success('审批成功，社团已激活')
-            loadPending()
+            refreshLists()
         }
     }).catch(() => { })
 }
 
 const handleReject = (row) => {
-  ElMessageBox.prompt('请输入拒绝理由', '驳回申请', {
-    confirmButtonText: '确定驳回',
-    cancelButtonText: '取消',
-    inputPattern: /\S+/,
-    inputErrorMessage: '理由不能为空',
-  }).then(async ({ value }) => {
-    const res = await request.post('/club/reject', { 
-      clubId: row.clubId, 
-      reason: value 
-    })
-    
-    if (res.code === 200) {
-      ElMessage.error('申请已驳回')
-      loadPending()
-    }
-  }).catch(() => {})
+    ElMessageBox.prompt('请输入拒绝理由', '驳回申请', {
+        confirmButtonText: '确定驳回',
+        cancelButtonText: '取消',
+        inputPattern: /\S+/,
+        inputErrorMessage: '理由不能为空',
+    }).then(async ({ value }) => {
+        const res = await request.post('/club/reject', {
+            clubId: row.clubId,
+            reason: value
+        })
+
+        if (res.code === 200) {
+            ElMessage.success('申请已驳回')
+            refreshLists()
+            activeTab.value = 'rejected'
+        }
+    }).catch(() => { })
 }
 
 onMounted(() => {
-    loadPending()
+    refreshLists()
 })
 </script>
 
