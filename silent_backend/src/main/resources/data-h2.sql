@@ -13,6 +13,6 @@ VALUES
   (1, 1, 2, 1, 1, CURRENT_TIMESTAMP),
   (2, 1, 3, 3, 1, CURRENT_TIMESTAMP);
 
-INSERT INTO activity (activity_id, club_id, title, description, location, start_time, end_time, max_participants, status, create_time)
+INSERT INTO activity (activity_id, club_id, title, description, location, points_reward, start_time, end_time, max_participants, status, create_time)
 VALUES
-  (1, 1, 'Welcome Meetup', 'Welcome new members to the club', 'Building A-101', TIMESTAMP '2026-05-20 18:30:00', TIMESTAMP '2026-05-20 20:00:00', 50, 0, CURRENT_TIMESTAMP);
+  (1, 1, 'Welcome Meetup', 'Welcome new members to the club', 'Building A-101', 10, TIMESTAMP '2026-05-20 18:30:00', TIMESTAMP '2026-05-20 20:00:00', 50, 0, CURRENT_TIMESTAMP);

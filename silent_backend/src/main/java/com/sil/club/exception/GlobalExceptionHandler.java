@@ -3,6 +3,7 @@ package com.sil.club.exception;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.sil.club.exception.AuthException;
 import com.sil.club.vo.Result;
 
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Result<String> handleException(Exception e) {
         log.error("系统发生未知异常: ", e);
+        if (e instanceof AuthException authException) {
+            return Result.error(authException.getCode(), authException.getMessage());
+        }
         if (e.getMessage() != null && !e.getMessage().isBlank()) {
             return Result.error(500, e.getMessage());
         }

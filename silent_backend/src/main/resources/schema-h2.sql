@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS activity (
   title VARCHAR(100) NOT NULL,
   description CLOB,
   location VARCHAR(100) NOT NULL,
+  points_reward INT DEFAULT 0,
   start_time TIMESTAMP NOT NULL,
   end_time TIMESTAMP NOT NULL,
   max_participants INT DEFAULT 0,

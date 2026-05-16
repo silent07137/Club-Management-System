@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,9 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.sil.club.entity.Club;
 import com.sil.club.entity.ClubMember;
+import com.sil.club.entity.User;
 import com.sil.club.mapper.ClubMemberMapper;
 import com.sil.club.service.IClubMemberService;
 import com.sil.club.service.IClubService;
+import com.sil.club.service.IUserService;
+import com.sil.club.utils.AuthUtil;
 import com.sil.club.vo.Result;
 
 @RestController
@@ -32,6 +36,8 @@ public class ClubController {
     private IClubMemberService clubMemberService;
     @Autowired
     private ClubMemberMapper clubMemberMapper;
+    @Autowired
+    private IUserService userService;
 
     @GetMapping("/list")
     public Result<List<Club>> list() {
@@ -111,7 +117,18 @@ public class ClubController {
 
     // 删除社团接口
     @DeleteMapping("/delete/{id}")
-    public Result deleteClub(@PathVariable("id") Long id) {
+    public Result deleteClub(@PathVariable("id") Long id, HttpServletRequest request) {
+        User currentUser = AuthUtil.requireCurrentUser(request, userService);
+        Club club = clubService.getById(id);
+        if (club == null) {
+            return Result.error("删除失败，社团可能不存在");
+        }
+        boolean isAdmin = Integer.valueOf(0).equals(currentUser.getGlobalRole())
+                || "ROLE_ADMIN".equalsIgnoreCase(currentUser.getRole());
+        boolean isLeader = currentUser.getUserId() != null && currentUser.getUserId().equals(club.getLeaderId());
+        if (!isAdmin && !isLeader) {
+            return Result.error(403, "仅社长可解散该社团");
+        }
         boolean success = clubService.deleteClubWithMembers(id);
         if (success) {
             return Result.success("社团解散成功");

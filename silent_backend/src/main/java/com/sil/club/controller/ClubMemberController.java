@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,8 @@ import com.sil.club.entity.Notification;
 import com.sil.club.service.IClubMemberService;
 import com.sil.club.service.IClubService;
 import com.sil.club.service.INotificationService;
+import com.sil.club.service.IUserService;
+import com.sil.club.utils.AuthUtil;
 import com.sil.club.vo.Result;
 
 @RestController
@@ -38,6 +41,9 @@ public class ClubMemberController {
 
     @Autowired
     private com.sil.club.mapper.ClubMemberMapper clubMemberMapper;
+
+    @Autowired
+    private IUserService userService;
 
     /**
      * 1. 提交入社申请 前端传参：{ "userId": 1, "clubId": 10 }
@@ -122,9 +128,32 @@ public class ClubMemberController {
         return Result.success(resultList);
     }
 
+    @GetMapping("/my-status")
+    public Result<List<Map<String, Object>>> getMyClubStatus(@RequestParam Long userId) {
+        List<ClubMember> members = clubMemberService.list(
+                new LambdaQueryWrapper<ClubMember>()
+                        .eq(ClubMember::getUserId, userId)
+        );
+
+        List<Map<String, Object>> resultList = new ArrayList<>();
+        for (ClubMember member : members) {
+            Map<String, Object> map = new HashMap<>();
+            Club club = clubService.getById(member.getClubId());
+            map.put("clubId", member.getClubId());
+            map.put("memberId", member.getMemberId());
+            map.put("clubName", club != null ? club.getName() : "未知社团");
+            map.put("roleType", member.getRoleType());
+            map.put("joinStatus", member.getJoinStatus());
+            map.put("createTime", member.getCreateTime());
+            resultList.add(map);
+        }
+        return Result.success(resultList);
+    }
+
     // 退出社团接口
     @DeleteMapping("/quit")
-    public Result quitClub(@RequestParam Long clubId, @RequestParam Long userId) {
+    public Result quitClub(@RequestParam Long clubId, HttpServletRequest request) {
+        Long userId = AuthUtil.requireCurrentUser(request, userService).getUserId();
         boolean success = clubMemberService.quitClub(clubId, userId);
         if (success) {
             return Result.success("已成功退出该社团");

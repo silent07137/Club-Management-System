@@ -1,0 +1,8 @@
+.appdata/
+.dotnet-home/
+.localappdata/
+.nuget-packages/
+.userprofile/
+NuGet/
+club-launcher/bin/
+club-launcher/obj/

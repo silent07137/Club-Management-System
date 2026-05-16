@@ -1,6 +1,11 @@
-﻿@echo off
+@echo off
 setlocal
 chcp 65001 >nul
+
+if /I "%~1" NEQ "--inner" (
+    start "Club System MySQL" cmd /k ""%~f0" --inner"
+    exit /b
+)
 
 set "ROOT_DIR=%~dp0"
 set "BACKEND_DIR=%ROOT_DIR%silent_backend"
@@ -14,10 +19,10 @@ netstat -ano | findstr ":3306" >nul
 if errorlevel 1 goto MYSQL_NOT_RUNNING
 
 echo [1/2] Starting backend (Spring Boot + MySQL)...
-start "" /D "%BACKEND_DIR%" cmd /k call mvnw.cmd -Dspring-boot.run.profiles=mysql spring-boot:run
+start "" /B /D "%BACKEND_DIR%" mvnw.cmd -Dspring-boot.run.profiles=mysql spring-boot:run
 
 echo [2/2] Starting frontend (Vue 3)...
-start "" /D "%FRONTEND_DIR%" cmd /k npm run dev
+start "" /B /D "%FRONTEND_DIR%" npm run dev
 
 echo.
 echo Waiting for startup, browser will open shortly...

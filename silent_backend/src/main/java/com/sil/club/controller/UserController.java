@@ -3,6 +3,7 @@ package com.sil.club.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +19,7 @@ import com.sil.club.entity.User;
 import com.sil.club.service.IClubMemberService;
 import com.sil.club.service.IUserService;
 import com.sil.club.vo.Result;
+import com.sil.club.utils.AuthUtil;
 
 @RestController
 @RequestMapping("/user")
@@ -42,10 +44,19 @@ public class UserController {
      * 登录接口
      */
     @PostMapping("/login")
-    public Result<User> login(@RequestBody UserDTO userDTO) {
+    public Result<User> login(@RequestBody UserDTO userDTO, HttpSession session) {
         User user = userService.login(userDTO);
         user.setPassword(null);
+        AuthUtil.storeSessionUserId(session, user.getUserId());
         return Result.success("登录成功", user);
+    }
+
+    @PostMapping("/logout")
+    public Result<String> logout(HttpSession session) {
+        if (session != null) {
+            session.invalidate();
+        }
+        return Result.success("退出成功");
     }
 
     @GetMapping("/list")

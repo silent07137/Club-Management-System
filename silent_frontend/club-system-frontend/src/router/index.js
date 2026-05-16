@@ -21,6 +21,11 @@ const routes = [
         component: () => import('../views/Home.vue')
       },
       {
+        path: 'notifications',
+        name: 'NotificationCenter',
+        component: () => import('../views/NotificationCenter.vue')
+      },
+      {
         path: 'activity',
         name: 'Activity',
         component: () => import('../views/ActivityManage.vue')
@@ -71,13 +76,20 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
   const isLoggedIn = !!localStorage.getItem('user')
+  const isAdmin = user.role === 'ROLE_ADMIN'
   if (to.path !== '/login' && !isLoggedIn) {
     next('/login')
     return
   }
 
   if (to.path === '/login' && isLoggedIn) {
+    next('/home')
+    return
+  }
+
+  if (to.path === '/activity' && !isAdmin) {
     next('/home')
     return
   }

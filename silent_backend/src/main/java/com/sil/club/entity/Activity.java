@@ -3,7 +3,9 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Getter;
@@ -19,6 +21,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@TableName("activity")
 public class Activity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -48,6 +51,12 @@ public class Activity implements Serializable {
      * 活动地点
      */
     private String location;
+
+    /**
+     * 活动积分奖励
+     */
+    @TableField("points_reward")
+    private Integer pointsReward;
 
     /**
      * 开始时间

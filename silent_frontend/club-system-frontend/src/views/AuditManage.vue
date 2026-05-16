@@ -2,13 +2,19 @@
   <div class="audit-container">
     <el-card class="header-card" shadow="never">
       <div class="header-row">
-        <div>
-          <h2>入社审批中心</h2>
-          <p>集中处理所有待审核的入社申请，减少来回切页。</p>
+        <div class="title-block">
+          <el-icon class="title-icon"><Stamp /></el-icon>
+          <div>
+            <h2>入社审批中心</h2>
+            <p>集中处理所有待审核的入社申请，减少来回切页。</p>
+          </div>
         </div>
         <div class="header-actions">
           <el-badge :value="applyList.length" :hidden="applyList.length === 0" type="primary">
-            <el-button :loading="loading" @click="loadApplyList">刷新</el-button>
+            <el-button :loading="loading" @click="loadApplyList">
+              <el-icon style="margin-right: 4px;"><Refresh /></el-icon>
+              刷新
+            </el-button>
           </el-badge>
         </div>
       </div>
@@ -30,16 +36,34 @@
       v-loading="loading"
       empty-text="当前没有待审批的入社申请"
     >
-      <el-table-column prop="memberId" label="申请编号" width="100" />
-      <el-table-column prop="userName" label="申请人" min-width="140" />
-      <el-table-column prop="clubName" label="申请社团" min-width="160" />
-      <el-table-column prop="createTime" label="申请时间" min-width="180">
+      <el-table-column prop="memberId" width="110">
+        <template #header>
+          <span class="column-header"><el-icon><Tickets /></el-icon><span>申请编号</span></span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="userName" min-width="140">
+        <template #header>
+          <span class="column-header"><el-icon><UserFilled /></el-icon><span>申请人</span></span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="clubName" min-width="160">
+        <template #header>
+          <span class="column-header"><el-icon><OfficeBuilding /></el-icon><span>申请社团</span></span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="createTime" min-width="180">
+        <template #header>
+          <span class="column-header"><el-icon><Clock /></el-icon><span>申请时间</span></span>
+        </template>
         <template #default="scope">
           {{ formatTime(scope.row.createTime) }}
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column width="220" fixed="right">
+        <template #header>
+          <span class="column-header"><el-icon><Operation /></el-icon><span>操作</span></span>
+        </template>
         <template #default="scope">
           <el-button
             type="success"
@@ -65,6 +89,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Stamp, Refresh, Tickets, UserFilled, OfficeBuilding, Clock, Operation } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../utils/request'
 
@@ -146,14 +171,42 @@ onMounted(() => {
   gap: 20px;
 }
 
-.header-row h2 {
+.title-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.title-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #409eff, #79bbff);
+  color: #fff;
+  font-size: 22px;
+  flex: 0 0 auto;
+}
+
+.title-block h2 {
   margin: 0 0 8px;
   color: #1f2d3d;
 }
 
-.header-row p {
+.title-block p {
   margin: 0;
   color: #606266;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.column-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {

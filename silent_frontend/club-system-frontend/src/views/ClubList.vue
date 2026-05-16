@@ -1,24 +1,38 @@
 <template>
-  <div class="club-square">
-    <el-card class="toolbar-card" shadow="never">
+  <div class="page-shell club-square">
+    <el-card class="page-card toolbar-card" shadow="never">
+      <template #header>
+        <div class="page-header">
+          <div class="page-title">
+            <el-icon class="title-icon"><OfficeBuilding /></el-icon>
+            <div>
+              <h2>社团广场</h2>
+              <p>浏览所有已开放社团，进入详情查看后再决定是否申请加入。</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <el-badge :value="filteredClubList.length" :hidden="filteredClubList.length === 0" type="primary">
+              <el-button :loading="loading" @click="loadClubs">
+                <el-icon style="margin-right: 4px;"><Refresh /></el-icon>
+                刷新
+              </el-button>
+            </el-badge>
+          </div>
+        </div>
+      </template>
+
       <div class="toolbar">
-        <div>
-          <h2>社团广场</h2>
-          <p>浏览所有已开放社团，进入详情查看后再决定是否申请加入。</p>
-        </div>
-        <div class="toolbar-actions">
-          <el-input
-            v-model="keyword"
-            clearable
-            placeholder="搜索社团名称或简介"
-            class="search-input"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-          <el-button :loading="loading" @click="loadClubs">刷新</el-button>
-        </div>
+        <el-input
+          v-model="keyword"
+          clearable
+          placeholder="搜索社团名称或简介"
+          class="search-input"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <el-button type="primary" plain @click="loadClubs">重新加载</el-button>
       </div>
     </el-card>
 
@@ -26,7 +40,7 @@
       <template #template>
         <el-row :gutter="20">
           <el-col :xs="24" :sm="12" :md="8" v-for="i in 3" :key="i">
-            <el-skeleton-item variant="rect" style="height: 220px; margin-bottom: 20px" />
+            <el-skeleton-item variant="rect" class="club-skeleton" />
           </el-col>
         </el-row>
       </template>
@@ -36,11 +50,18 @@
           <el-card class="club-card" shadow="hover">
             <template #header>
               <div class="card-header">
-                <div>
+                <div class="card-title">
                   <div class="club-name">{{ club.name }}</div>
-                  <div class="club-id">编号：{{ club.clubId }}</div>
+                  <div class="club-meta">
+                    <span><el-icon><Tickets /></el-icon> 编号：{{ club.clubId }}</span>
+                  </div>
                 </div>
-                <el-tag type="success" size="small">开放中</el-tag>
+                <div class="card-status">
+                  <el-tag type="success" size="small">开放中</el-tag>
+                  <el-tag :type="getMembershipTagType(club.clubId)" size="small" effect="plain">
+                    {{ getMembershipLabel(club.clubId) }}
+                  </el-tag>
+                </div>
               </div>
             </template>
 
@@ -49,8 +70,12 @@
             </div>
 
             <div class="card-footer">
-              <el-button text @click="goDetail(club)">查看详情</el-button>
+              <el-button text @click="goDetail(club)">
+                <el-icon style="margin-right: 4px;"><Operation /></el-icon>
+                查看详情
+              </el-button>
               <el-button
+                v-if="canApplyClub(club.clubId)"
                 type="primary"
                 :loading="applyingClubId === club.clubId"
                 :disabled="applyingClubId !== null && applyingClubId !== club.clubId"
@@ -71,7 +96,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search } from '@element-plus/icons-vue'
+import { Search, Refresh, OfficeBuilding, Tickets, Operation } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../utils/request'
 
@@ -80,6 +105,34 @@ const loading = ref(false)
 const applyingClubId = ref(null)
 const keyword = ref('')
 const clubList = ref([])
+const clubMemberships = ref([])
+
+const getMembershipRecord = (clubId) => {
+  return clubMemberships.value.find((item) => Number(item.clubId) === Number(clubId)) || null
+}
+
+const getMembershipTagType = (clubId) => {
+  const record = getMembershipRecord(clubId)
+  if (!record) return 'info'
+  if (Number(record.joinStatus) === 1) return 'success'
+  if (Number(record.joinStatus) === 0) return 'warning'
+  if (Number(record.joinStatus) === 2) return 'danger'
+  return 'info'
+}
+
+const getMembershipLabel = (clubId) => {
+  const record = getMembershipRecord(clubId)
+  if (!record) return '可申请'
+  if (Number(record.joinStatus) === 1) return '已加入'
+  if (Number(record.joinStatus) === 0) return '申请中'
+  if (Number(record.joinStatus) === 2) return '已拒绝'
+  return '状态未知'
+}
+
+const canApplyClub = (clubId) => {
+  const record = getMembershipRecord(clubId)
+  return !record
+}
 
 const filteredClubList = computed(() => {
   const kw = keyword.value.trim().toLowerCase()
@@ -104,6 +157,26 @@ const loadClubs = async () => {
     ElMessage.error('获取社团列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+const loadMemberships = async () => {
+  const userStore = JSON.parse(localStorage.getItem('user') || '{}')
+  const finalUserId = userStore.userId || userStore.id
+  if (!finalUserId) {
+    clubMemberships.value = []
+    return
+  }
+
+  try {
+    const res = await request.get('/club/member/my-status', {
+      params: { userId: finalUserId }
+    })
+    if (res.code === 200) {
+      clubMemberships.value = res.data || []
+    }
+  } catch (error) {
+    clubMemberships.value = []
   }
 }
 
@@ -142,50 +215,79 @@ const handleApply = (club) => {
 
 onMounted(() => {
   loadClubs()
+  loadMemberships()
 })
 </script>
 
 <style scoped>
-.club-square {
+.page-shell {
   padding: 20px;
+}
+
+.toolbar-card,
+.club-card {
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(31, 45, 61, 0.06);
 }
 
 .toolbar-card {
   margin-bottom: 20px;
-  border-radius: 14px;
 }
 
-.toolbar {
+.page-header {
   display: flex;
   justify-content: space-between;
   gap: 20px;
   align-items: center;
 }
 
-.toolbar h2 {
-  margin: 0 0 8px;
-  color: #1f2d3d;
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.toolbar p {
+.title-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #67c23a, #95d475);
+  color: #fff;
+  font-size: 22px;
+  flex: 0 0 auto;
+}
+
+.page-title h2 {
+  margin: 0 0 4px;
+  color: #1f2d3d;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.page-title p {
   margin: 0;
   color: #606266;
+  line-height: 1.5;
 }
 
-.toolbar-actions {
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
 .search-input {
-  width: 280px;
+  width: 320px;
 }
 
 .club-card {
   margin-bottom: 20px;
   transition: 0.3s;
-  border-radius: 14px;
 }
 
 .club-card:hover {
@@ -195,27 +297,52 @@ onMounted(() => {
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
 }
 
-.club-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #303133;
+.card-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
-.club-id {
-  margin-top: 4px;
+.card-status :deep(.el-tag),
+.card-header :deep(.el-tag) {
+  border-radius: 999px;
+  height: 28px;
+  line-height: 26px;
+  padding: 0 12px;
+}
+
+.card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.club-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #303133;
+  line-height: 1.25;
+}
+
+.club-meta {
   color: #909399;
   font-size: 12px;
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .club-desc {
   min-height: 64px;
   color: #606266;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .card-footer {
@@ -225,14 +352,14 @@ onMounted(() => {
   gap: 10px;
 }
 
-@media (max-width: 768px) {
-  .toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.club-skeleton {
+  height: 220px;
+  margin-bottom: 20px;
+}
 
-  .toolbar-actions {
-    width: 100%;
+@media (max-width: 768px) {
+  .page-header,
+  .toolbar {
     flex-direction: column;
     align-items: stretch;
   }

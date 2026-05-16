@@ -3,8 +3,23 @@ import { ElMessage } from 'element-plus'
 
 const request = axios.create({
     baseURL: '/api',
-    timeout: 5000
+    timeout: 5000,
+    withCredentials: true
 })
+
+request.interceptors.request.use(
+    config => {
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        if (user.userId || user.id) {
+            config.headers['X-User-Id'] = user.userId || user.id
+        }
+        if (user.role) {
+            config.headers['X-User-Role'] = user.role
+        }
+        return config
+    },
+    error => Promise.reject(error)
+)
 
 request.interceptors.response.use(
     response => {
